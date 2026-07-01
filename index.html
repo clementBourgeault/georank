@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>GéoClassement</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: rgba(255,255,255,0.08);
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --accent: #3b82f6;
+    --gold: #f59e0b;
+    --green: #22c55e;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px 16px 60px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ---- HEADER ---- */
+  .app-title {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .app-title span { color: var(--text); }
+
+  /* ---- CATÉGORIE ---- */
+  .cat-section { margin-bottom: 28px; }
+
+  .cat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px 20px 20px;
+    text-align: center;
+    margin-bottom: 12px;
+    transition: all .3s;
+  }
+  .cat-card.empty .cat-icon { font-size: 2.8rem; opacity: .25; }
+  .cat-card.filled .cat-icon { font-size: 2.8rem; }
+  .cat-card.filled .cat-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-top: 10px;
+    line-height: 1.2;
+  }
+  .cat-card.empty .placeholder {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  .cat-card.filled .cat-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .btn-draw {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: var(--accent);
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn-draw:active { transform: scale(0.97); opacity: .85; }
+
+  /* ---- SÉPARATEUR ---- */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* ---- RECHERCHE ---- */
+  .search-section {}
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 14px 14px 14px 42px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  /* ---- RÉSULTATS ---- */
+  .results { display: flex; flex-direction: column; gap: 8px; }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .result-card:active { border-color: var(--accent); }
+
+  .result-flag { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+
+  .result-body { flex: 1; min-width: 0; }
+  .result-name { font-weight: 700; font-size: 1rem; }
+  .result-cat { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  .result-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--gold);
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* État sans catégorie */
+  .no-cat-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 30px 0;
+  }
+
+  /* Aucun résultat */
+  .no-result {
+    text-align: center;
+    color: var(--muted);
+    padding: 24px 0;
+    font-size: 0.9rem;
+  }
+
+  /* ---- MODAL détail ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #1e293b;
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 48px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } }
+  .modal-flag { font-size: 4rem; text-align: center; line-height: 1; margin-bottom: 8px; }
+  .modal-name { font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 20px; }
+  .modal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-row-label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+  .modal-row-value { font-weight: 700; font-size: 1rem; }
+  .modal-row-value.highlight { color: var(--gold); font-size: 1.2rem; }
+  .modal-close {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: rgba(255,255,255,.08);
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-title">🌍 <span>GéoClassement</span></div>
+
+<!-- SECTION CATÉGORIE -->
+<div class="cat-section">
+  <div class="section-label">Catégorie en cours</div>
+  <div class="cat-card empty" id="cat-card">
+    <div class="cat-icon">🎲</div>
+    <div class="placeholder">Tire une catégorie pour commencer</div>
+  </div>
+  <button class="btn-draw" id="btn-draw">🎲 Tirer une catégorie</button>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECTION RECHERCHE -->
+<div class="search-section">
+  <div class="section-label">Rechercher un pays</div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search-input" type="text" placeholder="Ex : France, Japon, Brésil…" autocomplete="off">
+  </div>
+
+  <div class="results" id="results"></div>
+</div>
+
+<!-- MODAL détail pays -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-flag" id="m-flag"></div>
+    <div class="modal-name" id="m-name"></div>
+    <div id="m-rows"></div>
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">Fermer</button>
+  </div>
+</div>
+
+<script>
+/* ========== DONNÉES ========== */
+const COUNTRIES = [
+  {name:"France",       iso:"FR", pop:68000000,    pib:3030,  fifa:2,   alt:4809,  cote:3427,  unesco:53, surf:551695,   vie:82.5, dens:124,  front:8},
+  {name:"Allemagne",    iso:"DE", pop:84000000,    pib:4460,  fifa:16,  alt:2962,  cote:2389,  unesco:52, surf:357386,   vie:81,   dens:235,  front:9},
+  {name:"Espagne",      iso:"ES", pop:47000000,    pib:1580,  fifa:8,   alt:3715,  cote:4964,  unesco:50, surf:505990,   vie:83.5, dens:93,   front:4},
+  {name:"Italie",       iso:"IT", pop:59000000,    pib:2190,  fifa:9,   alt:4810,  cote:7600,  unesco:59, surf:301340,   vie:83,   dens:196,  front:6},
+  {name:"Royaume-Uni",  iso:"GB", pop:67000000,    pib:3340,  fifa:4,   alt:1345,  cote:12429, unesco:33, surf:243610,   vie:81,   dens:275,  front:1},
+  {name:"Portugal",     iso:"PT", pop:10300000,    pib:270,   fifa:6,   alt:2351,  cote:1793,  unesco:17, surf:92212,    vie:81.5, dens:112,  front:1},
+  {name:"Belgique",     iso:"BE", pop:11700000,    pib:627,   fifa:3,   alt:694,   cote:67,    unesco:16, surf:30528,    vie:82,   dens:384,  front:4},
+  {name:"Pays-Bas",     iso:"NL", pop:17900000,    pib:1090,  fifa:7,   alt:322,   cote:451,   unesco:13, surf:41543,    vie:82,   dens:431,  front:2},
+  {name:"Suisse",       iso:"CH", pop:8800000,     pib:905,   fifa:19,  alt:4634,  cote:0,     unesco:13, surf:41285,    vie:84,   dens:213,  front:5},
+  {name:"Suède",        iso:"SE", pop:10500000,    pib:593,   fifa:25,  alt:2097,  cote:3218,  unesco:15, surf:450295,   vie:83,   dens:23,   front:2},
+  {name:"Norvège",      iso:"NO", pop:5500000,     pib:485,   fifa:45,  alt:2469,  cote:25148, unesco:8,  surf:385207,   vie:83,   dens:14,   front:3},
+  {name:"Finlande",     iso:"FI", pop:5500000,     pib:300,   fifa:60,  alt:1324,  cote:1250,  unesco:7,  surf:338424,   vie:82,   dens:16,   front:3},
+  {name:"Pologne",      iso:"PL", pop:37700000,    pib:842,   fifa:28,  alt:2499,  cote:440,   unesco:17, surf:312696,   vie:78,   dens:120,  front:7},
+  {name:"Grèce",        iso:"GR", pop:10400000,    pib:238,   fifa:49,  alt:2917,  cote:13676, unesco:18, surf:131957,   vie:81.5, dens:79,   front:4},
+  {name:"Russie",       iso:"RU", pop:144000000,   pib:2020,  fifa:33,  alt:5642,  cote:37653, unesco:31, surf:17098242, vie:73,   dens:8,    front:14},
+  {name:"Turquie",      iso:"TR", pop:85000000,    pib:1110,  fifa:26,  alt:5137,  cote:7200,  unesco:19, surf:783562,   vie:78,   dens:109,  front:8},
+  {name:"Ukraine",      iso:"UA", pop:38000000,    pib:178,   fifa:22,  alt:2061,  cote:2782,  unesco:8,  surf:603628,   vie:71,   dens:63,   front:7},
+  {name:"États-Unis",   iso:"US", pop:335000000,   pib:27000, fifa:11,  alt:6190,  cote:19924, unesco:24, surf:9833517,  vie:79,   dens:34,   front:2},
+  {name:"Canada",       iso:"CA", pop:39000000,    pib:2140,  fifa:48,  alt:5959,  cote:202080,unesco:22, surf:9984670,  vie:82.5, dens:4,    front:1},
+  {name:"Mexique",      iso:"MX", pop:128000000,   pib:1810,  fifa:14,  alt:5636,  cote:9330,  unesco:35, surf:1964375,  vie:75,   dens:65,   front:3},
+  {name:"Brésil",       iso:"BR", pop:216000000,   pib:2170,  fifa:5,   alt:2995,  cote:7491,  unesco:23, surf:8515767,  vie:76,   dens:25,   front:10},
+  {name:"Argentine",    iso:"AR", pop:46000000,    pib:640,   fifa:1,   alt:6961,  cote:4989,  unesco:12, surf:2780400,  vie:77,   dens:17,   front:5},
+  {name:"Chili",        iso:"CL", pop:19600000,    pib:335,   fifa:42,  alt:6893,  cote:6435,  unesco:7,  surf:756102,   vie:80,   dens:26,   front:3},
+  {name:"Colombie",     iso:"CO", pop:52000000,    pib:364,   fifa:12,  alt:5700,  cote:3208,  unesco:9,  surf:1141748,  vie:77,   dens:46,   front:5},
+  {name:"Pérou",        iso:"PE", pop:34000000,    pib:268,   fifa:35,  alt:6768,  cote:2414,  unesco:13, surf:1285216,  vie:77,   dens:26,   front:5},
+  {name:"Chine",        iso:"CN", pop:1410000000,  pib:17800, fifa:79,  alt:8849,  cote:14500, unesco:57, surf:9596961,  vie:78.5, dens:147,  front:14},
+  {name:"Japon",        iso:"JP", pop:124000000,   pib:4200,  fifa:17,  alt:3776,  cote:29751, unesco:25, surf:377975,   vie:84.5, dens:328,  front:0},
+  {name:"Corée du Sud", iso:"KR", pop:51700000,    pib:1710,  fifa:23,  alt:1947,  cote:2413,  unesco:16, surf:100210,   vie:83.5, dens:517,  front:1},
+  {name:"Inde",         iso:"IN", pop:1428000000,  pib:3730,  fifa:117, alt:8586,  cote:7000,  unesco:42, surf:3287263,  vie:70,   dens:434,  front:6},
+  {name:"Indonésie",    iso:"ID", pop:277000000,   pib:1370,  fifa:134, alt:4884,  cote:54716, unesco:10, surf:1904569,  vie:72,   dens:145,  front:3},
+  {name:"Thaïlande",    iso:"TH", pop:71800000,    pib:514,   fifa:113, alt:2565,  cote:3219,  unesco:7,  surf:513120,   vie:77,   dens:140,  front:4},
+  {name:"Vietnam",      iso:"VN", pop:99000000,    pib:433,   fifa:116, alt:3147,  cote:3444,  unesco:8,  surf:331212,   vie:75.5, dens:299,  front:3},
+  {name:"Arabie Saoudite",iso:"SA",pop:36000000,   pib:1070,  fifa:56,  alt:3133,  cote:2640,  unesco:7,  surf:2149690,  vie:77,   dens:17,   front:7},
+  {name:"Émirats arabes unis",iso:"AE",pop:9500000,pib:509,   fifa:67,  alt:1934,  cote:1318,  unesco:1,  surf:83600,    vie:79,   dens:114,  front:2},
+  {name:"Israël",       iso:"IL", pop:9400000,     pib:522,   fifa:80,  alt:1208,  cote:273,   unesco:9,  surf:22072,    vie:83,   dens:425,  front:4},
+  {name:"Égypte",       iso:"EG", pop:112000000,   pib:387,   fifa:34,  alt:2629,  cote:2450,  unesco:7,  surf:1002450,  vie:72,   dens:112,  front:4},
+  {name:"Maroc",        iso:"MA", pop:37800000,    pib:142,   fifa:13,  alt:4167,  cote:1835,  unesco:9,  surf:446550,   vie:77,   dens:85,   front:3},
+  {name:"Algérie",      iso:"DZ", pop:45600000,    pib:239,   fifa:39,  alt:3003,  cote:998,   unesco:7,  surf:2381741,  vie:77,   dens:19,   front:7},
+  {name:"Nigeria",      iso:"NG", pop:223000000,   pib:390,   fifa:32,  alt:2419,  cote:853,   unesco:2,  surf:923768,   vie:55,   dens:241,  front:4},
+  {name:"Afrique du Sud",iso:"ZA",pop:60000000,    pib:380,   fifa:61,  alt:3450,  cote:2798,  unesco:10, surf:1221037,  vie:65,   dens:49,   front:6},
+  {name:"Kenya",        iso:"KE", pop:55000000,    pib:118,   fifa:89,  alt:5199,  cote:536,   unesco:7,  surf:580367,   vie:67,   dens:95,   front:5},
+  {name:"Éthiopie",     iso:"ET", pop:126000000,   pib:156,   fifa:141, alt:4550,  cote:0,     unesco:9,  surf:1104300,  vie:67,   dens:114,  front:6},
+  {name:"Australie",    iso:"AU", pop:26600000,    pib:1690,  fifa:24,  alt:2228,  cote:25760, unesco:20, surf:7692024,  vie:83.5, dens:3.5,  front:0},
+  {name:"Nouvelle-Zélande",iso:"NZ",pop:5200000,   pib:247,   fifa:91,  alt:3724,  cote:15134, unesco:3,  surf:268838,   vie:82.5, dens:19,   front:0},
+  {name:"Islande",      iso:"IS", pop:390000,      pib:31,    fifa:73,  alt:2110,  cote:4970,  unesco:3,  surf:103000,   vie:83,   dens:3.8,  front:0},
+  {name:"Irlande",      iso:"IE", pop:5100000,     pib:545,   fifa:62,  alt:1038,  cote:1448,  unesco:2,  surf:70273,    vie:82.5, dens:73,   front:1},
+  {name:"Croatie",      iso:"HR", pop:3900000,     pib:81,    fifa:10,  alt:1831,  cote:5835,  unesco:10, surf:56594,    vie:78.5, dens:69,   front:4},
+  {name:"Autriche",     iso:"AT", pop:9100000,     pib:515,   fifa:27,  alt:3798,  cote:0,     unesco:12, surf:83879,    vie:82,   dens:108,  front:8},
+  {name:"Danemark",     iso:"DK", pop:5900000,     pib:405,   fifa:21,  alt:171,   cote:7314,  unesco:11, surf:43094,    vie:81.5, dens:137,  front:1},
+  {name:"Madagascar",   iso:"MG", pop:30300000,    pib:16,    fifa:108, alt:2876,  cote:4828,  unesco:3,  surf:587041,   vie:67,   dens:52,   front:0}
+];
+
+const CATEGORIES = [
+  {key:"pop",    label:"Population",            unit:"hab.",     icon:"👥", fmt:v=>v.toLocaleString("fr-FR")+" hab."},
+  {key:"pib",    label:"PIB nominal",           unit:"Md$",      icon:"💰", fmt:v=>v.toLocaleString("fr-FR")+" Md$"},
+  {key:"fifa",   label:"Classement FIFA",       unit:"rang",     icon:"⚽", fmt:v=>"#"+v, note:"Plus le rang est bas, meilleure est l'équipe"},
+  {key:"alt",    label:"Point culminant",       unit:"m",        icon:"⛰️", fmt:v=>v.toLocaleString("fr-FR")+" m"},
+  {key:"cote",   label:"Longueur des côtes",    unit:"km",       icon:"🌊", fmt:v=>v.toLocaleString("fr-FR")+" km"},
+  {key:"unesco", label:"Sites UNESCO",          unit:"sites",    icon:"🏛️", fmt:v=>v+" site"+(v>1?"s":"")},
+  {key:"surf",   label:"Superficie",            unit:"km²",      icon:"🗺️", fmt:v=>v.toLocaleString("fr-FR")+" km²"},
+  {key:"vie",    label:"Espérance de vie",      unit:"ans",      icon:"❤️", fmt:v=>v+" ans"},
+  {key:"dens",   label:"Densité de population", unit:"hab/km²",  icon:"🏙️", fmt:v=>v+" hab/km²"},
+  {key:"front",  label:"Pays frontaliers",      unit:"voisins",  icon:"🧭", fmt:v=>v+" voisin"+(v>1?"s":"")}
+];
+
+/* ========== ÉTAT ========== */
+let currentCat = null;
+
+function flag(iso){
+  return iso.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
+}
+
+/* ========== TIRAGE CATÉGORIE ========== */
+document.getElementById("btn-draw").addEventListener("click", () => {
+  // exclure la catégorie actuelle du tirage
+  const pool = currentCat ? CATEGORIES.filter(c => c.key !== currentCat.key) : CATEGORIES;
+  currentCat = pool[Math.floor(Math.random() * pool.length)];
+
+  const card = document.getElementById("cat-card");
+  card.className = "cat-card filled";
+  card.innerHTML = `
+    <div class="cat-icon">${currentCat.icon}</div>
+    <div class="cat-name">${currentCat.label}</div>
+    <div class="cat-desc">${currentCat.note || "Classe les pays du plus petit au plus grand"}</div>
+  `;
+
+  // rafraîchir les résultats si une recherche est en cours
+  renderResults(document.getElementById("search-input").value.trim());
+});
+
+/* ========== RECHERCHE ========== */
+document.getElementById("search-input").addEventListener("input", e => {
+  renderResults(e.target.value.trim());
+});
+
+function normalize(str){
+  return str.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[-'\s]/g, "");
+}
+
+function renderResults(query){
+  const el = document.getElementById("results");
+  el.innerHTML = "";
+
+  if(!currentCat){
+    el.innerHTML = `<div class="no-cat-hint">Tire d'abord une catégorie</div>`;
+    return;
+  }
+  if(query.length < 4){
+    return;
+  }
+
+  const q = normalize(query);
+  const matches = COUNTRIES.filter(c => normalize(c.name).includes(q)).slice(0, 8);
+
+  if(matches.length === 0){
+    el.innerHTML = `<div class="no-result">Aucun pays trouvé pour « ${query} »</div>`;
+    return;
+  }
+
+  matches.forEach(c => {
+    const card = document.createElement("div");
+    card.className = "result-card";
+    card.innerHTML = `
+      <div class="result-flag">${flag(c.iso)}</div>
+      <div class="result-body">
+        <div class="result-name">${c.name}</div>
+        <div class="result-cat">${currentCat.icon} ${currentCat.label}</div>
+      </div>
+      <div class="result-value">${currentCat.fmt(c[currentCat.key])}</div>
+    `;
+    card.addEventListener("click", () => openModal(c));
+    el.appendChild(card);
+  });
+}
+
+/* ========== MODAL détail ========== */
+function openModal(country){
+  document.getElementById("m-flag").textContent = flag(country.iso);
+  document.getElementById("m-name").textContent = country.name;
+
+  const rows = document.getElementById("m-rows");
+  rows.innerHTML = "";
+
+  CATEGORIES.forEach(cat => {
+    const isActive = currentCat && cat.key === currentCat.key;
+    const row = document.createElement("div");
+    row.className = "modal-row";
+    row.innerHTML = `
+      <div class="modal-row-label">${cat.icon} ${cat.label}</div>
+      <div class="modal-row-value${isActive ? " highlight" : ""}">${cat.fmt(country[cat.key])}</div>
+    `;
+    rows.appendChild(row);
+  });
+
+  document.getElementById("modal").classList.add("open");
+}
+
+function closeModal(e){
+  if(e.target === document.getElementById("modal"))
+    document.getElementById("modal").classList.remove("open");
+}
+</script>
+</body>
+</html>
