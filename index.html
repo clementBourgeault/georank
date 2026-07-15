@@ -1,394 +1,556 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>GéoClassement</title>
-<style>
-  :root {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --border: rgba(255,255,255,0.08);
-    --text: #f1f5f9;
-    --muted: #64748b;
-    --accent: #3b82f6;
-    --gold: #f59e0b;
-    --green: #22c55e;
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 20px 16px 60px;
-    max-width: 480px;
-    margin: 0 auto;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>GéoClassement</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --gold: #f59e0b;
+      --green: #22c55e;
+    }
 
-  /* ---- HEADER ---- */
-  .app-title {
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: .5px;
-    color: var(--muted);
-    margin-bottom: 24px;
-  }
-  .app-title span { color: var(--text); }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
 
-  /* ---- CATÉGORIE ---- */
-  .cat-section { margin-bottom: 28px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
 
-  .cat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px 20px 20px;
-    text-align: center;
-    margin-bottom: 12px;
-    transition: all .3s;
-  }
-  .cat-card.empty .cat-icon { font-size: 2.8rem; opacity: .25; }
-  .cat-card.filled .cat-icon { font-size: 2.8rem; }
-  .cat-card.filled .cat-name {
-    font-size: 1.5rem;
-    font-weight: 800;
-    margin-top: 10px;
-    line-height: 1.2;
-  }
-  .cat-card.empty .placeholder {
-    font-size: 1rem;
-    color: var(--muted);
-    margin-top: 10px;
-  }
-  .cat-card.filled .cat-desc {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-top: 6px;
-  }
+    /* ---- HEADER ---- */
+    .app-title {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
 
-  .btn-draw {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 14px;
-    background: var(--accent);
-    color: white;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    transition: opacity .15s, transform .1s;
-  }
-  .btn-draw:active { transform: scale(0.97); opacity: .85; }
+    .app-title span {
+      color: var(--text);
+    }
 
-  /* ---- SÉPARATEUR ---- */
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 28px 0;
-  }
+    /* ---- CATÉGORIE ---- */
+    .cat-section {
+      margin-bottom: 28px;
+    }
 
-  /* ---- RECHERCHE ---- */
-  .search-section {}
-  .section-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
+    .cat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 20px 20px;
+      text-align: center;
+      margin-bottom: 12px;
+      transition: all .3s;
+    }
 
-  .search-wrap {
-    position: relative;
-    margin-bottom: 12px;
-  }
-  .search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.1rem;
-    pointer-events: none;
-  }
-  .search-input {
-    width: 100%;
-    padding: 14px 14px 14px 42px;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    background: var(--card);
-    color: var(--text);
-    font-size: 1rem;
-    font-family: inherit;
-    outline: none;
-    transition: border-color .2s;
-  }
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--muted); }
+    .cat-card.empty .cat-icon {
+      font-size: 2.8rem;
+      opacity: .25;
+    }
 
-  /* ---- RÉSULTATS ---- */
-  .results { display: flex; flex-direction: column; gap: 8px; }
+    .cat-card.filled .cat-icon {
+      font-size: 2.8rem;
+    }
 
-  .result-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    transition: border-color .15s;
-  }
-  .result-card:active { border-color: var(--accent); }
+    .cat-card.filled .cat-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-top: 10px;
+      line-height: 1.2;
+    }
 
-  .result-flag { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+    .cat-card.empty .placeholder {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-top: 10px;
+    }
 
-  .result-body { flex: 1; min-width: 0; }
-  .result-name { font-weight: 700; font-size: 1rem; }
-  .result-cat { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .cat-card.filled .cat-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
 
-  .result-value {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: var(--gold);
-    text-align: right;
-    flex-shrink: 0;
-  }
+    .btn-draw {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity .15s, transform .1s;
+    }
 
-  /* État sans catégorie */
-  .no-cat-hint {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.9rem;
-    padding: 30px 0;
-  }
+    .btn-draw:active {
+      transform: scale(0.97);
+      opacity: .85;
+    }
 
-  /* Aucun résultat */
-  .no-result {
-    text-align: center;
-    color: var(--muted);
-    padding: 24px 0;
-    font-size: 0.9rem;
-  }
+    /* ---- SÉPARATEUR ---- */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
 
-  /* ---- MODAL détail ---- */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.6);
-    backdrop-filter: blur(4px);
-    z-index: 100;
-    align-items: flex-end;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: #1e293b;
-    border-radius: 24px 24px 0 0;
-    padding: 28px 24px 48px;
-    width: 100%;
-    max-width: 480px;
-    animation: slideUp .25s ease;
-  }
-  @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } }
-  .modal-flag { font-size: 4rem; text-align: center; line-height: 1; margin-bottom: 8px; }
-  .modal-name { font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 20px; }
-  .modal-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .modal-row:last-child { border-bottom: none; }
-  .modal-row-label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
-  .modal-row-value { font-weight: 700; font-size: 1rem; }
-  .modal-row-value.highlight { color: var(--gold); font-size: 1.2rem; }
-  .modal-close {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 14px;
-    background: rgba(255,255,255,.08);
-    color: var(--text);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    margin-top: 20px;
-  }
-</style>
+    /* ---- RECHERCHE ---- */
+    .search-section {}
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .search-wrap {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 14px 14px 42px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-input::placeholder {
+      color: var(--muted);
+    }
+
+    /* ---- RÉSULTATS ---- */
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+
+    .result-card:active {
+      border-color: var(--accent);
+    }
+
+    .result-flag {
+      font-size: 2rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .result-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .result-name {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .result-cat {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .result-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--gold);
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* État sans catégorie */
+    .no-cat-hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 30px 0;
+    }
+
+    /* Aucun résultat */
+    .no-result {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px 0;
+      font-size: 0.9rem;
+    }
+
+    /* ---- MODAL détail ---- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: #1e293b;
+      border-radius: 24px 24px 0 0;
+      padding: 28px 24px 48px;
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp .25s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(60px);
+        opacity: 0;
+      }
+    }
+
+    .modal-flag {
+      font-size: 4rem;
+      text-align: center;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .modal-name {
+      font-size: 1.6rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-row:last-child {
+      border-bottom: none;
+    }
+
+    .modal-row-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .modal-row-value {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .modal-row-value.highlight {
+      color: var(--gold);
+      font-size: 1.2rem;
+    }
+
+    .modal-close {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .08);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      margin-top: 20px;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="app-title">🌍 <span>GéoClassement</span></div>
+  <div class="app-title">🌍 <span>GéoClassement</span></div>
 
-<!-- SECTION CATÉGORIE -->
-<div class="cat-section">
-  <div class="section-label">Catégorie en cours</div>
-  <div class="cat-card empty" id="cat-card">
-    <div class="cat-icon">🎲</div>
-    <div class="placeholder">Tire une catégorie pour commencer</div>
-  </div>
-  <button class="btn-draw" id="btn-draw">🎲 Tirer une catégorie</button>
-</div>
-
-<div class="divider"></div>
-
-<!-- SECTION RECHERCHE -->
-<div class="search-section">
-  <div class="section-label">Rechercher un pays</div>
-
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" id="search-input" type="text" placeholder="Ex : France, Japon, Brésil…" autocomplete="off">
+  <!-- SECTION CATÉGORIE -->
+  <div class="cat-section">
+    <div class="section-label">Catégorie en cours</div>
+    <div class="cat-card empty" id="cat-card">
+      <div class="cat-icon">🎲</div>
+      <div class="placeholder">Tire une catégorie pour commencer</div>
+    </div>
+    <button class="btn-draw" id="btn-draw">🎲 Tirer une catégorie</button>
   </div>
 
-  <div class="results" id="results"></div>
-</div>
+  <div class="divider"></div>
 
-<!-- MODAL détail pays -->
-<div class="modal-overlay" id="modal" onclick="closeModal(event)">
-  <div class="modal" id="modal-content">
-    <div class="modal-flag" id="m-flag"></div>
-    <div class="modal-name" id="m-name"></div>
-    <div id="m-rows"></div>
-    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">Fermer</button>
+  <!-- SECTION RECHERCHE -->
+  <div class="search-section">
+    <div class="section-label">Rechercher un pays</div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-input" type="text" placeholder="Ex : France, Japon, Brésil…"
+        autocomplete="off">
+    </div>
+
+    <div class="results" id="results"></div>
   </div>
-</div>
 
-<script>
-/* ========== DONNÉES ========== */
-const COUNTRIES = [
-  {name:"France",       iso:"FR", pop:68000000,    pib:3030,  fifa:1,   alt:4809,  cote:3427,  unesco:53, surf:551695,   vie:82.5, dens:124,  front:8},
-  {name:"Allemagne",    iso:"DE", pop:84000000,    pib:4460,  fifa:12,  alt:2962,  cote:2389,  unesco:52, surf:357386,   vie:81,   dens:235,  front:9},
-  {name:"Espagne",      iso:"ES", pop:47000000,    pib:1580,  fifa:3,   alt:3715,  cote:4964,  unesco:50, surf:505990,   vie:83.5, dens:93,   front:4},
-  {name:"Italie",       iso:"IT", pop:59000000,    pib:2190,  fifa:14,   alt:4810,  cote:7600,  unesco:59, surf:301340,   vie:83,   dens:196,  front:6},
-  {name:"Angleterre",  iso:"GB", pop:56000000,    pib:2900,  fifa:4,   alt:978,  cote:12429, unesco:33, surf:130279,   vie:81,   dens:275,  front:1},
-  {name:"Portugal",     iso:"PT", pop:10300000,    pib:270,   fifa:8,   alt:2351,  cote:1793,  unesco:17, surf:92212,    vie:81.5, dens:112,  front:1},
-  {name:"Belgique",     iso:"BE", pop:11700000,    pib:627,   fifa:10,   alt:694,   cote:67,    unesco:16, surf:30528,    vie:82,   dens:384,  front:4},
-  {name:"Pays-Bas",     iso:"NL", pop:17900000,    pib:1090,  fifa:7,   alt:322,   cote:451,   unesco:13, surf:41543,    vie:82,   dens:431,  front:2},
-  {name:"Suisse",       iso:"CH", pop:8800000,     pib:905,   fifa:16,  alt:4634,  cote:0,     unesco:13, surf:41285,    vie:84,   dens:213,  front:5},
-  {name:"Suède",        iso:"SE", pop:10500000,    pib:593,   fifa:38,  alt:2097,  cote:3218,  unesco:15, surf:450295,   vie:83,   dens:23,   front:2},
-  {name:"Norvège",      iso:"NO", pop:5500000,     pib:485,   fifa:21,  alt:2469,  cote:25148, unesco:8,  surf:385207,   vie:83,   dens:14,   front:3},
-  {name:"Finlande",     iso:"FI", pop:5500000,     pib:300,   fifa:75,  alt:1324,  cote:1250,  unesco:7,  surf:338424,   vie:82,   dens:16,   front:3},
-  {name:"Pologne",      iso:"PL", pop:37700000,    pib:842,   fifa:37,  alt:2499,  cote:440,   unesco:17, surf:312696,   vie:78,   dens:120,  front:7},
-  {name:"Grèce",        iso:"GR", pop:10400000,    pib:238,   fifa:46,  alt:2917,  cote:13676, unesco:18, surf:131957,   vie:81.5, dens:79,   front:4},
-  {name:"Russie",       iso:"RU", pop:144000000,   pib:2020,  fifa:36,  alt:5642,  cote:37653, unesco:31, surf:17098242, vie:73,   dens:8,    front:14},
-  {name:"Turquie",      iso:"TR", pop:85000000,    pib:1110,  fifa:27,  alt:5137,  cote:7200,  unesco:19, surf:783562,   vie:78,   dens:109,  front:8},
-  {name:"Ukraine",      iso:"UA", pop:38000000,    pib:178,   fifa:33,  alt:2061,  cote:2782,  unesco:8,  surf:603628,   vie:71,   dens:63,   front:7},
-  {name:"États-Unis",   iso:"US", pop:335000000,   pib:27000, fifa:15,  alt:6190,  cote:19924, unesco:24, surf:9833517,  vie:79,   dens:34,   front:2},
-  {name:"Canada",       iso:"CA", pop:39000000,    pib:2140,  fifa:30,  alt:5959,  cote:202080,unesco:22, surf:9984670,  vie:82.5, dens:4,    front:1},
-  {name:"Mexique",      iso:"MX", pop:128000000,   pib:1810,  fifa:9,  alt:5636,  cote:9330,  unesco:35, surf:1964375,  vie:75,   dens:65,   front:3},
-  {name:"Brésil",       iso:"BR", pop:216000000,   pib:2170,  fifa:5,   alt:2995,  cote:7491,  unesco:23, surf:8515767,  vie:76,   dens:25,   front:10},
-  {name:"Argentine",    iso:"AR", pop:46000000,    pib:640,   fifa:2,   alt:6961,  cote:4989,  unesco:12, surf:2780400,  vie:77,   dens:17,   front:5},
-  {name:"Chili",        iso:"CL", pop:19600000,    pib:335,   fifa:49,  alt:6893,  cote:6435,  unesco:7,  surf:756102,   vie:80,   dens:26,   front:3},
-  {name:"Colombie",     iso:"CO", pop:52000000,    pib:364,   fifa:11,  alt:5700,  cote:3208,  unesco:9,  surf:1141748,  vie:77,   dens:46,   front:5},
-  {name:"Pérou",        iso:"PE", pop:34000000,    pib:268,   fifa:50,  alt:6768,  cote:2414,  unesco:13, surf:1285216,  vie:77,   dens:26,   front:5},
-  {name:"Chine",        iso:"CN", pop:1410000000,  pib:17800, fifa:91,  alt:8849,  cote:14500, unesco:57, surf:9596961,  vie:78.5, dens:147,  front:14},
-  {name:"Japon",        iso:"JP", pop:124000000,   pib:4200,  fifa:17,  alt:3776,  cote:29751, unesco:25, surf:377975,   vie:84.5, dens:328,  front:0},
-  {name:"Corée du Sud", iso:"KR", pop:51700000,    pib:1710,  fifa:32,  alt:1947,  cote:2413,  unesco:16, surf:100210,   vie:83.5, dens:517,  front:1},
-  {name:"Inde",         iso:"IN", pop:1428000000,  pib:3730,  fifa:138, alt:8586,  cote:7000,  unesco:42, surf:3287263,  vie:70,   dens:434,  front:6},
-  {name:"Indonésie",    iso:"ID", pop:277000000,   pib:1370,  fifa:118, alt:4884,  cote:54716, unesco:10, surf:1904569,  vie:72,   dens:145,  front:3},
-  {name:"Thaïlande",    iso:"TH", pop:71800000,    pib:514,   fifa:94, alt:2565,  cote:3219,  unesco:7,  surf:513120,   vie:77,   dens:140,  front:4},
-  {name:"Vietnam",      iso:"VN", pop:99000000,    pib:433,   fifa:99, alt:3147,  cote:3444,  unesco:8,  surf:331212,   vie:75.5, dens:299,  front:3},
-  {name:"Arabie Saoudite",iso:"SA",pop:36000000,   pib:1070,  fifa:58,  alt:3133,  cote:2640,  unesco:7,  surf:2149690,  vie:77,   dens:17,   front:7},
-  {name:"Émirats arabes unis",iso:"AE",pop:9500000,pib:509,   fifa:68,  alt:1934,  cote:1318,  unesco:1,  surf:83600,    vie:79,   dens:114,  front:2},
-  {name:"Israël",       iso:"IL", pop:9400000,     pib:522,   fifa:76,  alt:1208,  cote:273,   unesco:9,  surf:22072,    vie:83,   dens:425,  front:4},
-  {name:"Égypte",       iso:"EG", pop:112000000,   pib:387,   fifa:26,  alt:2629,  cote:2450,  unesco:7,  surf:1002450,  vie:72,   dens:112,  front:4},
-  {name:"Maroc",        iso:"MA", pop:37800000,    pib:142,   fifa:6,  alt:4167,  cote:1835,  unesco:9,  surf:446550,   vie:77,   dens:85,   front:3},
-  {name:"Algérie",      iso:"DZ", pop:45600000,    pib:239,   fifa:29,  alt:3003,  cote:998,   unesco:7,  surf:2381741,  vie:77,   dens:19,   front:7},
-  {name:"Nigeria",      iso:"NG", pop:223000000,   pib:390,   fifa:25,  alt:2419,  cote:853,   unesco:2,  surf:923768,   vie:55,   dens:241,  front:4},
-  {name:"Afrique du Sud",iso:"ZA",pop:60000000,    pib:380,   fifa:54,  alt:3450,  cote:2798,  unesco:10, surf:1221037,  vie:65,   dens:49,   front:6},
-  {name:"Kenya",        iso:"KE", pop:55000000,    pib:118,   fifa:109,  alt:5199,  cote:536,   unesco:7,  surf:580367,   vie:67,   dens:95,   front:5},
-  {name:"Éthiopie",     iso:"ET", pop:126000000,   pib:156,   fifa:143, alt:4550,  cote:0,     unesco:9,  surf:1104300,  vie:67,   dens:114,  front:6},
-  {name:"Australie",    iso:"AU", pop:26600000,    pib:1690,  fifa:28,  alt:2228,  cote:25760, unesco:20, surf:7692024,  vie:83.5, dens:3.5,  front:0},
-  {name:"Nouvelle-Zélande",iso:"NZ",pop:5200000,   pib:247,   fifa:86,  alt:3724,  cote:15134, unesco:3,  surf:268838,   vie:82.5, dens:19,   front:0},
-  {name:"Islande",      iso:"IS", pop:390000,      pib:31,    fifa:74,  alt:2110,  cote:4970,  unesco:3,  surf:103000,   vie:83,   dens:3.8,  front:0},
-  {name:"Irlande",      iso:"IE", pop:5100000,     pib:545,   fifa:55,  alt:1038,  cote:1448,  unesco:2,  surf:70273,    vie:82.5, dens:73,   front:1},
-  {name:"Croatie",      iso:"HR", pop:3900000,     pib:81,    fifa:13,  alt:1831,  cote:5835,  unesco:10, surf:56594,    vie:78.5, dens:69,   front:4},
-  {name:"Autriche",     iso:"AT", pop:9100000,     pib:515,   fifa:23,  alt:3798,  cote:0,     unesco:12, surf:83879,    vie:82,   dens:108,  front:8},
-  {name:"Danemark",     iso:"DK", pop:5900000,     pib:405,   fifa:20,  alt:171,   cote:7314,  unesco:11, surf:43094,    vie:81.5, dens:137,  front:1},
-  {name:"Madagascar",   iso:"MG", pop:30300000,    pib:16,    fifa:104, alt:2876,  cote:4828,  unesco:3,  surf:587041,   vie:67,   dens:52,   front:0}
-];
+  <!-- MODAL détail pays -->
+  <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal" id="modal-content">
+      <div class="modal-flag" id="m-flag"></div>
+      <div class="modal-name" id="m-name"></div>
+      <div id="m-rows"></div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">Fermer</button>
+    </div>
+  </div>
 
-const CATEGORIES = [
-  {key:"pop",    label:"Population",            unit:"hab.",     icon:"👥", fmt:v=>v.toLocaleString("fr-FR")+" hab."},
-  {key:"pib",    label:"PIB nominal",           unit:"Md$",      icon:"💰", fmt:v=>v.toLocaleString("fr-FR")+" Md$"},
-  {key:"fifa",   label:"Classement FIFA",       unit:"rang",     icon:"⚽", fmt:v=>"#"+v, note:"Plus le rang est bas, meilleure est l'équipe"},
-  {key:"alt",    label:"Point culminant",       unit:"m",        icon:"⛰️", fmt:v=>v.toLocaleString("fr-FR")+" m"},
-  {key:"cote",   label:"Longueur des côtes",    unit:"km",       icon:"🌊", fmt:v=>v.toLocaleString("fr-FR")+" km"},
-  {key:"unesco", label:"Sites UNESCO",          unit:"sites",    icon:"🏛️", fmt:v=>v+" site"+(v>1?"s":"")},
-  {key:"surf",   label:"Superficie",            unit:"km²",      icon:"🗺️", fmt:v=>v.toLocaleString("fr-FR")+" km²"},
-  {key:"vie",    label:"Espérance de vie",      unit:"ans",      icon:"❤️", fmt:v=>v+" ans"},
-  {key:"dens",   label:"Densité de population", unit:"hab/km²",  icon:"🏙️", fmt:v=>v+" hab/km²"},
-  {key:"front",  label:"Pays frontaliers",      unit:"voisins",  icon:"🧭", fmt:v=>v+" voisin"+(v>1?"s":"")}
-];
+  <script>
+    /* ========== DONNÉES ========== */
+    const COUNTRIES = [
+      { "name": "France", "iso": "FR", "pop": 68000000, "pib": 3030, "fifa": 1, "alt": 4809, "cote": 3427, "unesco": 53, "surf": 551695, "vie": 82.5, "dens": 124, "front": 8, "pib_hab": 51708, "jo": 816, "co2": 4.7, "urbain": 81, "age_med": 42, "tourisme": 100.0, "ido": 71, "rail": 28100, "alpha": 99, "nobel": 70 },
+      { "name": "Allemagne", "iso": "DE", "pop": 84000000, "pib": 4460, "fifa": 12, "alt": 2962, "cote": 2389, "unesco": 52, "surf": 357386, "vie": 81, "dens": 235, "front": 9, "pib_hab": 63600, "jo": 688, "co2": 8.1, "urbain": 78, "age_med": 47, "tourisme": 35.0, "ido": 78, "rail": 33400, "alpha": 99, "nobel": 115 },
+      { "name": "Espagne", "iso": "ES", "pop": 47000000, "pib": 1580, "fifa": 3, "alt": 3715, "cote": 4964, "unesco": 50, "surf": 505990, "vie": 83.5, "dens": 93, "front": 4, "pib_hab": 40582, "jo": 187, "co2": 5.5, "urbain": 81, "age_med": 46, "tourisme": 85.0, "ido": 60, "rail": 15980, "alpha": 98, "nobel": 8 },
+      { "name": "Italie", "iso": "IT", "pop": 59000000, "pib": 2190, "fifa": 14, "alt": 4810, "cote": 7600, "unesco": 59, "surf": 301340, "vie": 83, "dens": 196, "front": 6, "pib_hab": 45883, "jo": 658, "co2": 5.7, "urbain": 72, "age_med": 48, "tourisme": 57.0, "ido": 56, "rail": 16736, "alpha": 99, "nobel": 21 },
+      { "name": "Royaume-Uni", iso: "GB", pop: 67000000, "pib": 3340, "fifa": 4, "alt": 1345, "cote": 12429, "unesco": 33, "surf": 243610, "vie": 81, "dens": 275, "front": 1, "pib_hab": 60011, "jo": 980, "co2": 4.6, "urbain": 84, "age_med": 40, "tourisme": 38.0, "ido": 71, "rail": 16193, "alpha": 99, "nobel": 137 },
+      { "name": "Portugal", "iso": "PT", "pop": 10300000, "pib": 270, "fifa": 8, "alt": 2351, "cote": 1793, "unesco": 17, "surf": 92212, "vie": 81.5, "dens": 112, "front": 1, "pib_hab": 33972, "jo": 32, "co2": 4.3, "urbain": 68, "age_med": 46, "tourisme": 17.0, "ido": 62, "rail": 2526, "alpha": 95, "nobel": 2 },
+      { "name": "Belgique", "iso": "BE", "pop": 11700000, "pib": 627, "fifa": 10, "alt": 694, "cote": 67, "unesco": 16, "surf": 30528, "vie": 82, "dens": 384, "front": 4, "pib_hab": 63896, "jo": 167, "co2": 8.3, "urbain": 98, "age_med": 41, "tourisme": 9.0, "ido": 73, "rail": 3623, "alpha": 99, "nobel": 11 },
+      { "name": "Pays-Bas", "iso": "NL", "pop": 17900000, "pib": 1090, "fifa": 7, "alt": 322, "cote": 451, "unesco": 13, "surf": 41543, "vie": 82, "dens": 431, "front": 2, "pib_hab": 77881, "jo": 356, "co2": 8.9, "urbain": 93, "age_med": 42, "tourisme": 20.0, "ido": 79, "rail": 3058, "alpha": 99, "nobel": 22 },
+      { "name": "Suisse", "iso": "CH", "pop": 8800000, "pib": 905, "fifa": 16, "alt": 4634, "cote": 0, "unesco": 13, "surf": 41285, "vie": 84, "dens": 213, "front": 5, "pib_hab": 118173, "jo": 214, "co2": 4.3, "urbain": 74, "age_med": 43, "tourisme": 12.0, "ido": 82, "rail": 5317, "alpha": 99, "nobel": 27 },
+      { "name": "Suède", "iso": "SE", "pop": 10500000, "pib": 593, "fifa": 38, "alt": 2097, "cote": 3218, "unesco": 15, "surf": 450295, "vie": 83, "dens": 23, "front": 2, "pib_hab": 66124, "jo": 514, "co2": 3.9, "urbain": 88, "age_med": 41, "tourisme": 7.0, "ido": 82, "rail": 10940, "alpha": 99, "nobel": 32 },
+      { "name": "Norvège", "iso": "NO", "pop": 5500000, "pib": 485, "fifa": 21, "alt": 2469, "cote": 25148, "unesco": 8, "surf": 385207, "vie": 83, "dens": 14, "front": 3, "pib_hab": 96580, "jo": 171, "co2": 7.8, "urbain": 83, "age_med": 40, "tourisme": 5.0, "ido": 84, "rail": 4200, "alpha": 99, "nobel": 13 },
+      { "name": "Finlande", "iso": "FI", "pop": 5500000, "pib": 300, "fifa": 75, "alt": 1324, "cote": 1250, "unesco": 7, "surf": 338424, "vie": 82, "dens": 16, "front": 3, "pib_hab": 59750, "jo": 305, "co2": 7.1, "urbain": 85, "age_med": 43, "tourisme": 3.0, "ido": 87, "rail": 5920, "alpha": 99, "nobel": 4 },
+      { "name": "Pologne", "iso": "PL", "pop": 37700000, "pib": 842, "fifa": 37, "alt": 2499, "cote": 440, "unesco": 17, "surf": 312696, "vie": 78, "dens": 120, "front": 7, "pib_hab": 30651, "jo": 308, "co2": 8.3, "urbain": 61, "age_med": 42, "tourisme": 20.0, "ido": 54, "rail": 19460, "alpha": 99, "nobel": 19 },
+      { "name": "Grèce", "iso": "GR", "pop": 10400000, "pib": 238, "fifa": 46, "alt": 2917, "cote": 13676, "unesco": 18, "surf": 131957, "vie": 81.5, "dens": 79, "front": 4, "pib_hab": 29412, "jo": 129, "co2": 5.4, "urbain": 80, "age_med": 46, "tourisme": 33.0, "ido": 49, "rail": 2532, "alpha": 97, "nobel": 2 },
+      { "name": "Russie", "iso": "RU", "pop": 144000000, "pib": 2020, "fifa": 36, "alt": 5642, "cote": 37653, "unesco": 31, "surf": 17098242, "vie": 73, "dens": 8, "front": 14, "pib_hab": 17287, "jo": 422, "co2": 12.3, "urbain": 75, "age_med": 41, "tourisme": 15.0, "ido": 26, "rail": 86000, "alpha": 99, "nobel": 32 },
+      { "name": "Turquie", "iso": "TR", "pop": 85000000, "pib": 1110, "fifa": 27, "alt": 5137, "cote": 7200, "unesco": 19, "surf": 783562, "vie": 78, "dens": 109, "front": 8, "pib_hab": 18232, "jo": 111, "co2": 4.9, "urbain": 77, "age_med": 33, "tourisme": 57.0, "ido": 34, "rail": 13300, "alpha": 96, "nobel": 2 },
+      { "name": "Ukraine", "iso": "UA", "pop": 38000000, "pib": 178, "fifa": 33, "alt": 2061, "cote": 2782, "unesco": 8, "surf": 603628, "vie": 71, "dens": 63, "front": 7, "pib_hab": 6718, "jo": 151, "co2": 4.0, "urbain": 70, "age_med": 43, "tourisme": 1.0, "ido": 36, "rail": 20400, "alpha": 99, "nobel": 3 },
+      { "name": "États-Unis", "iso": "US", "pop": 335000000, "pib": 27000, "fifa": 15, "alt": 6190, "cote": 19924, "unesco": 24, "surf": 9833517, "vie": 79, "dens": 34, "front": 2, "pib_hab": 92883, "jo": 2765, "co2": 14.9, "urbain": 83, "age_med": 38, "tourisme": 66.0, "ido": 69, "rail": 148000, "alpha": 99, "nobel": 400 },
+      { "name": "Canada", "iso": "CA", "pop": 39000000, "pib": 2140, "fifa": 30, "alt": 5959, "cote": 202080, "unesco": 22, "surf": 9984670, "vie": 82.5, "dens": 4, "front": 1, "pib_hab": 58244, "jo": 353, "co2": 14.3, "urbain": 82, "age_med": 41, "tourisme": 22.0, "ido": 76, "rail": 40000, "alpha": 99, "nobel": 28 },
+      { "name": "Mexique", "iso": "MX", "pop": 128000000, "pib": 1810, "fifa": 9, "alt": 5636, "cote": 9330, "unesco": 35, "surf": 1964375, "vie": 75, "dens": 65, "front": 3, "pib_hab": 15111, "jo": 77, "co2": 3.5, "urbain": 82, "age_med": 29, "tourisme": 42.0, "ido": 31, "rail": 8360, "alpha": 95, "nobel": 2 },
+      { "name": "Brésil", "iso": "BR", "pop": 216000000, "pib": 2170, "fifa": 5, "alt": 2995, "cote": 7491, "unesco": 23, "surf": 8515767, "vie": 76, "dens": 25, "front": 10, "pib_hab": 10709, "jo": 170, "co2": 2.2, "urbain": 88, "age_med": 33, "tourisme": 7.0, "ido": 36, "rail": 29074, "alpha": 94, "nobel": 1 },
+      { "name": "Argentine", "iso": "AR", "pop": 46000000, "pib": 640, "fifa": 2, "alt": 6961, "cote": 4989, "unesco": 12, "surf": 2780400, "vie": 77, "dens": 17, "front": 5, "pib_hab": 13895, "jo": 80, "co2": 4.3, "urbain": 93, "age_med": 32, "tourisme": 7.0, "ido": 37, "rail": 36000, "alpha": 99, "nobel": 5 },
+      { "name": "Chili", "iso": "CL", "pop": 19600000, "pib": 335, "fifa": 49, "alt": 6893, "cote": 6435, "unesco": 7, "surf": 756102, "vie": 80, "dens": 26, "front": 3, "pib_hab": 17876, "jo": 15, "co2": 4.5, "urbain": 88, "age_med": 36, "tourisme": 6.0, "ido": 66, "rail": 7282, "alpha": 97, "nobel": 2 },
+      { "name": "Colombie", "iso": "CO", "pop": 52000000, "pib": 364, "fifa": 11, "alt": 5700, "cote": 3208, "unesco": 9, "surf": 1141748, "vie": 77, "dens": 46, "front": 5, "pib_hab": 8644, "jo": 38, "co2": 1.7, "urbain": 83, "age_med": 32, "tourisme": 6.0, "ido": 41, "rail": 150, "alpha": 95, "nobel": 1 },
+      { "name": "Pérou", "iso": "PE", "pop": 34000000, "pib": 268, "fifa": 50, "alt": 6768, "cote": 2414, "unesco": 13, "surf": 1285216, "vie": 77, "dens": 26, "front": 5, "pib_hab": 9398, "jo": 5, "co2": 1.6, "urbain": 79, "age_med": 30, "tourisme": 4.0, "ido": 33, "rail": 1854, "alpha": 94, "nobel": 1 },
+      { "name": "Chine", "iso": "CN", "pop": 1410000000, "pib": 17800, "fifa": 91, "alt": 8849, "cote": 14500, "unesco": 57, "surf": 9596961, "vie": 78.5, "dens": 147, "front": 14, "pib_hab": 14730, "jo": 727, "co2": 8.0, "urbain": 66, "age_med": 39, "tourisme": 26.0, "ido": 42, "rail": 150000, "alpha": 96, "nobel": 12 },
+      { "name": "Japon", "iso": "JP", "pop": 124000000, "pib": 4200, "fifa": 17, "alt": 3776, "cote": 29751, "unesco": 25, "surf": 377975, "vie": 84.5, "dens": 328, "front": 0, "pib_hab": 36391, "jo": 542, "co2": 8.5, "urbain": 92, "age_med": 49, "tourisme": 25.0, "ido": 73, "rail": 27000, "alpha": 99, "nobel": 29 },
+      { "name": "Corée du Sud", "iso": "KR", "pop": 51700000, "pib": 1710, "fifa": 32, "alt": 1947, "cote": 2413, "unesco": 16, "surf": 100210, "vie": 83.5, "dens": 517, "front": 1, "pib_hab": 37523, "jo": 320, "co2": 11.6, "urbain": 82, "age_med": 44, "tourisme": 11.0, "ido": 63, "rail": 4082, "alpha": 99, "nobel": 2 },
+      { "name": "Inde", "iso": "IN", "pop": 1428000000, "pib": 3730, "fifa": 138, "alt": 8586, "cote": 7000, "unesco": 42, "surf": 3287263, "vie": 70, "dens": 434, "front": 6, "pib_hab": 3051, "jo": 41, "co2": 2.0, "urbain": 36, "age_med": 29, "tourisme": 9.0, "ido": 39, "rail": 67956, "alpha": 77, "nobel": 12 },
+      { "name": "Indonésie", "iso": "ID", "pop": 277000000, "pib": 1370, "fifa": 118, "alt": 4884, "cote": 54716, "unesco": 10, "surf": 1904569, "vie": 72, "dens": 145, "front": 3, "pib_hab": 5398, "jo": 40, "co2": 2.3, "urbain": 59, "age_med": 30, "tourisme": 12.0, "ido": 34, "rail": 8159, "alpha": 96, "nobel": 0 },
+      { "name": "Thaïlande", "iso": "TH", "pop": 71800000, "pib": 514, "fifa": 94, "alt": 2565, "cote": 3219, "unesco": 7, "surf": 513120, "vie": 77, "dens": 140, "front": 4, "pib_hab": 7979, "jo": 41, "co2": 3.9, "urbain": 52, "age_med": 40, "tourisme": 28.0, "ido": 35, "rail": 4041, "alpha": 95, "nobel": 0 },
+      { "name": "Vietnam", "iso": "VN", "pop": 99000000, "pib": 433, "fifa": 99, "alt": 3147, "cote": 3444, "unesco": 8, "surf": 331212, "vie": 75.5, "dens": 299, "front": 3, "pib_hab": 4965, "jo": 5, "co2": 3.7, "urbain": 39, "age_med": 33, "tourisme": 13.0, "ido": 41, "rail": 2632, "alpha": 95, "nobel": 0 },
+      { "name": "Arabie Saoudite", "iso": "SA", "pop": 36000000, "pib": 1070, "fifa": 58, "alt": 3133, "cote": 2640, "unesco": 7, "surf": 2149690, "vie": 77, "dens": 17, "front": 7, "pib_hab": 35839, "jo": 4, "co2": 18.7, "urbain": 85, "age_med": 30, "tourisme": 16.0, "ido": 52, "rail": 1390, "alpha": 97, "nobel": 0 },
+      { "name": "Émirats arabes unis", "iso": "AE", "pop": 9500000, "pib": 509, "fifa": 68, "alt": 1934, "cote": 1318, "unesco": 1, "surf": 83600, "vie": 79, "dens": 114, "front": 2, "pib_hab": 53842, "jo": 2, "co2": 19.4, "urbain": 87, "age_med": 34, "tourisme": 24.0, "ido": 68, "rail": 150, "alpha": 96, "nobel": 0 },
+      { "name": "Israël", "iso": "IL", "pop": 9400000, "pib": 522, "fifa": 76, "alt": 1208, "cote": 273, "unesco": 9, "surf": 22072, "vie": 83, "dens": 425, "front": 4, "pib_hab": 64275, "jo": 20, "co2": 7.1, "urbain": 93, "age_med": 30, "tourisme": 4.0, "ido": 62, "rail": 1404, "alpha": 97, "nobel": 14 },
+      { "name": "Égypte", "iso": "EG", "pop": 112000000, "pib": 387, "fifa": 26, "alt": 2629, "cote": 2450, "unesco": 7, "surf": 1002450, "vie": 72, "dens": 112, "front": 4, "pib_hab": 3579, "jo": 41, "co2": 2.5, "urbain": 43, "age_med": 25, "tourisme": 14.0, "ido": 35, "rail": 5290, "alpha": 75, "nobel": 4 },
+      { "name": "Maroc", "iso": "MA", "pop": 37800000, "pib": 142, "fifa": 6, "alt": 4167, "cote": 1835, "unesco": 9, "surf": 446550, "vie": 77, "dens": 85, "front": 3, "pib_hab": 5154, "jo": 26, "co2": 1.8, "urbain": 64, "age_med": 31, "tourisme": 15.0, "ido": 38, "rail": 1907, "alpha": 76, "nobel": 0 },
+      { "name": "Algérie", "iso": "DZ", "pop": 45600000, "pib": 239, "fifa": 29, "alt": 3003, "cote": 998, "unesco": 7, "surf": 2381741, "vie": 77, "dens": 19, "front": 7, "pib_hab": 5956, "jo": 20, "co2": 3.8, "urbain": 75, "age_med": 29, "tourisme": 4.0, "ido": 33, "rail": 4100, "alpha": 82, "nobel": 0 },
+      { "name": "Nigeria", "iso": "NG", "pop": 223000000, "pib": 390, "fifa": 25, "alt": 2419, "cote": 853, "unesco": 2, "surf": 923768, "vie": 55, "dens": 241, "front": 4, "pib_hab": 1378, "jo": 27, "co2": 0.5, "urbain": 54, "age_med": 18, "tourisme": 2.0, "ido": 25, "rail": 3900, "alpha": 62, "nobel": 2 },
+      { "name": "Afrique du Sud", "iso": "ZA", "pop": 60000000, "pib": 380, "fifa": 54, "alt": 3450, "cote": 2798, "unesco": 10, "surf": 1221037, "vie": 65, "dens": 49, "front": 6, "pib_hab": 6835, "jo": 95, "co2": 7.8, "urbain": 68, "age_med": 28, "tourisme": 9.0, "ido": 41, "rail": 22051, "alpha": 87, "nobel": 5 },
+      { "name": "Kenya", "iso": "KE", "pop": 55000000, "pib": 118, "fifa": 109, "alt": 5199, "cote": 536, "unesco": 7, "surf": 580367, "vie": 67, "dens": 95, "front": 5, "pib_hab": 2596, "jo": 124, "co2": 0.3, "urbain": 30, "age_med": 20, "tourisme": 2.0, "ido": 32, "rail": 590, "alpha": 82, "nobel": 1 },
+      { "name": "Éthiopie", "iso": "ET", "pop": 126000000, "pib": 156, "fifa": 143, "alt": 4550, "cote": 0, "unesco": 9, "surf": 1104300, "vie": 67, "dens": 114, "front": 6, "pib_hab": 1124, "jo": 62, "co2": 0.1, "urbain": 24, "age_med": 19, "tourisme": 1.0, "ido": 35, "rail": 659, "alpha": 52, "nobel": 1 },
+      { "name": "Australie", "iso": "AU", "pop": 26600000, "pib": 1690, "fifa": 28, "alt": 2228, "cote": 25760, "unesco": 20, "surf": 7692024, "vie": 83.5, "dens": 3.5, "front": 0, "pib_hab": 69358, "jo": 600, "co2": 14.8, "urbain": 86, "age_med": 38, "tourisme": 9.0, "ido": 75, "rail": 32000, "alpha": 99, "nobel": 15 },
+      { "name": "Nouvelle-Zélande", "iso": "NZ", "pop": 5200000, "pib": 247, "fifa": 86, "alt": 3724, "cote": 15134, "unesco": 3, "surf": 268838, "vie": 82.5, "dens": 19, "front": 0, "pib_hab": 52181, "jo": 157, "co2": 7.8, "urbain": 87, "age_med": 38, "tourisme": 4.0, "ido": 85, "rail": 3898, "alpha": 99, "nobel": 3 },
+      { "name": "Islande", "iso": "IS", "pop": 390000, "pib": 31, "fifa": 74, "alt": 2110, "cote": 4970, "unesco": 3, "surf": 103000, "vie": 83, "dens": 3.8, "front": 0, "pib_hab": 108591, "jo": 4, "co2": 8.7, "urbain": 94, "age_med": 37, "tourisme": 2.1, "ido": 77, "rail": 0, "alpha": 99, "nobel": 1 },
+      { "name": "Irlande", "iso": "IE", "pop": 5100000, "pib": 545, "fifa": 55, "alt": 1038, "cote": 1448, "unesco": 2, "surf": 70273, "vie": 82.5, "dens": 73, "front": 1, "pib_hab": 135247, "jo": 42, "co2": 7.3, "urbain": 64, "age_med": 38, "tourisme": 10.0, "ido": 77, "rail": 1700, "alpha": 99, "nobel": 12 },
+      { "name": "Croatie", "iso": "HR", "pop": 3900000, "pib": 81, "fifa": 13, "alt": 1831, "cote": 5835, "unesco": 10, "surf": 56594, "vie": 78.5, "dens": 69, "front": 4, "pib_hab": 29368, "jo": 48, "co2": 3.5, "urbain": 58, "age_med": 44, "tourisme": 20.0, "ido": 50, "rail": 2617, "alpha": 99, "nobel": 2 },
+      { "name": "Autriche", "iso": "AT", "pop": 9100000, "pib": 515, "fifa": 23, "alt": 3798, "cote": 0, "unesco": 12, "surf": 83879, "vie": 82, "dens": 108, "front": 8, "pib_hab": 65640, "jo": 101, "co2": 6.9, "urbain": 59, "age_med": 44, "tourisme": 32.0, "ido": 71, "rail": 5554, "alpha": 99, "nobel": 22 },
+      { "name": "Danemark", "iso": "DK", "pop": 5900000, "pib": 405, "fifa": 20, "alt": 171, "cote": 7314, "unesco": 11, "surf": 43094, "vie": 81.5, "dens": 137, "front": 1, "pib_hab": 82706, "jo": 214, "co2": 6.0, "urbain": 88, "age_med": 42, "tourisme": 12.0, "ido": 90, "rail": 2633, "alpha": 99, "nobel": 14 },
+      { "name": "Madagascar", "iso": "MG", "pop": 30300000, "pib": 16, "fifa": 104, "alt": 2876, "cote": 4828, "unesco": 3, "surf": 587041, "vie": 67, "dens": 52, "front": 0, "pib_hab": 653, "jo": 0, "co2": 0.2, "urbain": 40, "age_med": 18, "tourisme": 0.3, "ido": 25, "rail": 854, "alpha": 76, "nobel": 0 },
+      { "name": "Roumanie", "iso": "RO", "pop": 19000000, "pib": 350, "fifa": 46, "alt": 2544, "cote": 225, "unesco": 9, "surf": 238397, "vie": 76, "dens": 80, "front": 5, "pib_hab": 23768, "jo": 317, "co2": 4.2, "urbain": 56, "age_med": 43, "tourisme": 4.0, "ido": 46, "rail": 10777, "alpha": 98, "nobel": 2 },
+      { "name": "Hongrie", "iso": "HU", "pop": 9700000, "pib": 200, "fifa": 29, "alt": 1014, "cote": 0, "unesco": 8, "surf": 93028, "vie": 76.5, "dens": 104, "front": 7, "pib_hab": 28304, "jo": 530, "co2": 4.6, "urbain": 72, "age_med": 44, "tourisme": 14.0, "ido": 42, "rail": 7685, "alpha": 99, "nobel": 15 },
+      { "name": "République tchèque", "iso": "CZ", "pop": 10900000, "pib": 330, "fifa": 38, "alt": 1602, "cote": 0, "unesco": 17, "surf": 78867, "vie": 79, "dens": 138, "front": 4, "pib_hab": 38373, "jo": 72, "co2": 9.2, "urbain": 74, "age_med": 43, "tourisme": 14.0, "ido": 57, "rail": 9403, "alpha": 99, "nobel": 2 },
+      { "name": "Serbie", "iso": "RS", "pop": 6800000, "pib": 80, "fifa": 30, "alt": 2656, "cote": 0, "unesco": 5, "surf": 77474, "vie": 76, "dens": 88, "front": 8, "pib_hab": 17292, "jo": 29, "co2": 5.5, "urbain": 57, "age_med": 43, "tourisme": 3.0, "ido": 36, "rail": 3809, "alpha": 98, "nobel": 2 },
+      { "name": "Bulgarie", "iso": "BG", "pop": 6500000, "pib": 103, "fifa": 75, "alt": 2925, "cote": 354, "unesco": 10, "surf": 110879, "vie": 75, "dens": 59, "front": 5, "pib_hab": 22896, "jo": 231, "co2": 7.5, "urbain": 74, "age_med": 44, "tourisme": 12.0, "ido": 45, "rail": 4030, "alpha": 98, "nobel": 1 },
+      { "name": "Lituanie", "iso": "LT", "pop": 2800000, "pib": 79, "fifa": 130, "alt": 294, "cote": 90, "unesco": 4, "surf": 65300, "vie": 76, "dens": 43, "front": 4, "pib_hab": 36225, "jo": 30, "co2": 4.8, "urbain": 68, "age_med": 44, "tourisme": 2.0, "ido": 59, "rail": 1768, "alpha": 99, "nobel": 0 },
+      { "name": "Biélorussie", "iso": "BY", "pop": 9400000, "pib": 73, "fifa": 88, "alt": 346, "cote": 0, "unesco": 4, "surf": 207600, "vie": 74, "dens": 45, "front": 5, "pib_hab": 10016, "jo": 85, "co2": 6.8, "urbain": 80, "age_med": 41, "tourisme": 0.4, "ido": 21, "rail": 5491, "alpha": 99, "nobel": 1 },
+      { "name": "Moldova", "iso": "MD", "pop": 2600000, "pib": 16, "fifa": 172, "alt": 429, "cote": 0, "unesco": 1, "surf": 33846, "vie": 72, "dens": 77, "front": 2, "pib_hab": 8984, "jo": 10, "co2": 2.4, "urbain": 43, "age_med": 38, "tourisme": 0.2, "ido": 42, "rail": 1157, "alpha": 99, "nobel": 0 },
+      { "name": "Luxembourg", "iso": "LU", "pop": 660000, "pib": 87, "fifa": 96, "alt": 560, "cote": 0, "unesco": 1, "surf": 2586, "vie": 83, "dens": 255, "front": 3, "pib_hab": 154115, "jo": 3, "co2": 13.8, "urbain": 91, "age_med": 39, "tourisme": 1.0, "ido": 78, "rail": 275, "alpha": 99, "nobel": 0 },
+      { "name": "Malte", "iso": "MT", "pop": 530000, "pib": 20, "fifa": 163, "alt": 253, "cote": 197, "unesco": 3, "surf": 316, "vie": 83, "dens": 1676, "front": 0, "pib_hab": 53082, "jo": 0, "co2": 3.7, "urbain": 95, "age_med": 42, "tourisme": 2.3, "ido": 51, "rail": 0, "alpha": 94, "nobel": 0 },
+      { "name": "Chypre", "iso": "CY", "pop": 1200000, "pib": 32, "fifa": 104, "alt": 1952, "cote": 782, "unesco": 3, "surf": 9251, "vie": 83, "dens": 130, "front": 1, "pib_hab": 45601, "jo": 2, "co2": 6.3, "urbain": 67, "age_med": 39, "tourisme": 3.5, "ido": 53, "rail": 0, "alpha": 98, "nobel": 0 },
+      { "name": "Bosnie-Herzégovine", "iso": "BA", "pop": 3200000, "pib": 26, "fifa": 65, "alt": 2386, "cote": 20, "unesco": 2, "surf": 51197, "vie": 77, "dens": 63, "front": 3, "pib_hab": 10546, "jo": 0, "co2": 6.1, "urbain": 50, "age_med": 43, "tourisme": 1.0, "ido": 35, "rail": 601, "alpha": 98, "nobel": 0 },
+      { "name": "Tanzanie", "iso": "TZ", "pop": 65000000, "pib": 79, "fifa": 103, "alt": 5895, "cote": 1424, "unesco": 7, "surf": 945087, "vie": 68, "dens": 69, "front": 8, "pib_hab": 1378, "jo": 2, "co2": 0.2, "urbain": 37, "age_med": 18, "tourisme": 1.7, "ido": 35, "rail": 3890, "alpha": 78, "nobel": 0 },
+      { "name": "Ghana", "iso": "GH", "pop": 33000000, "pib": 76, "fifa": 63, "alt": 876, "cote": 539, "unesco": 2, "surf": 238533, "vie": 64, "dens": 138, "front": 3, "pib_hab": 3179, "jo": 5, "co2": 0.5, "urbain": 59, "age_med": 21, "tourisme": 1.0, "ido": 43, "rail": 947, "alpha": 83, "nobel": 0 },
+      { "name": "Cameroun", "iso": "CM", "pop": 28000000, "pib": 47, "fifa": 53, "alt": 4070, "cote": 402, "unesco": 2, "surf": 475442, "vie": 60, "dens": 59, "front": 6, "pib_hab": 2195, "jo": 6, "co2": 0.3, "urbain": 60, "age_med": 18, "tourisme": 0.4, "ido": 25, "rail": 987, "alpha": 77, "nobel": 0 },
+      { "name": "Côte d'Ivoire", "iso": "CI", "pop": 27000000, "pib": 78, "fifa": 57, "alt": 1752, "cote": 520, "unesco": 5, "surf": 322463, "vie": 59, "dens": 84, "front": 5, "pib_hab": 3294, "jo": 5, "co2": 0.5, "urbain": 53, "age_med": 18, "tourisme": 0.7, "ido": 40, "rail": 660, "alpha": 69, "nobel": 0 },
+      { "name": "Sénégal", "iso": "SN", "pop": 17000000, "pib": 31, "fifa": 20, "alt": 648, "cote": 531, "unesco": 7, "surf": 196722, "vie": 68, "dens": 87, "front": 5, "pib_hab": 2030, "jo": 1, "co2": 0.6, "urbain": 49, "age_med": 19, "tourisme": 1.5, "ido": 43, "rail": 906, "alpha": 60, "nobel": 0 },
+      { "name": "Mozambique", "iso": "MZ", "pop": 33000000, "pib": 20, "fifa": 119, "alt": 2436, "cote": 2470, "unesco": 1, "surf": 801590, "vie": 58, "dens": 41, "front": 6, "pib_hab": 720, "jo": 2, "co2": 0.2, "urbain": 39, "age_med": 17, "tourisme": 0.4, "ido": 25, "rail": 3100, "alpha": 63, "nobel": 0 },
+      { "name": "Tunisie", "iso": "TN", "pop": 12000000, "pib": 49, "fifa": 31, "alt": 1544, "cote": 1148, "unesco": 9, "surf": 163610, "vie": 77, "dens": 74, "front": 2, "pib_hab": 4826, "jo": 18, "co2": 2.9, "urbain": 71, "age_med": 32, "tourisme": 9.5, "ido": 41, "rail": 2155, "alpha": 82, "nobel": 0 },
+      { "name": "Angola", "iso": "AO", "pop": 36000000, "pib": 101, "fifa": 111, "alt": 2620, "cote": 1600, "unesco": 1, "surf": 1246700, "vie": 62, "dens": 29, "front": 4, "pib_hab": 2701, "jo": 0, "co2": 0.6, "urbain": 68, "age_med": 17, "tourisme": 0.4, "ido": 28, "rail": 2638, "alpha": 71, "nobel": 0 },
+      { "name": "RD Congo", "iso": "CD", "pop": 100000000, "pib": 65, "fifa": 72, "alt": 5109, "cote": 37, "unesco": 5, "surf": 2344858, "vie": 61, "dens": 43, "front": 9, "pib_hab": 801, "jo": 0, "co2": 0.0, "urbain": 48, "age_med": 17, "tourisme": 0.2, "ido": 20, "rail": 4007, "alpha": 80, "nobel": 0 },
+      { "name": "Ouganda", "iso": "UG", "pop": 47000000, "pib": 49, "fifa": 97, "alt": 5110, "cote": 0, "unesco": 3, "surf": 241550, "vie": 64, "dens": 195, "front": 5, "pib_hab": 1458, "jo": 13, "co2": 0.1, "urbain": 27, "age_med": 17, "tourisme": 1.0, "ido": 26, "rail": 250, "alpha": 77, "nobel": 0 },
+      { "name": "Rwanda", "iso": "RW", "pop": 14000000, "pib": 14, "fifa": 102, "alt": 4507, "cote": 0, "unesco": 2, "surf": 26338, "vie": 69, "dens": 535, "front": 4, "pib_hab": 1069, "jo": 0, "co2": 0.1, "urbain": 18, "age_med": 20, "tourisme": 0.3, "ido": 53, "rail": 0, "alpha": 74, "nobel": 0 },
+      { "name": "Namibie", "iso": "NA", "pop": 2600000, "pib": 13, "fifa": 124, "alt": 2573, "cote": 1572, "unesco": 2, "surf": 824292, "vie": 63, "dens": 3.1, "front": 4, "pib_hab": 5182, "jo": 5, "co2": 1.4, "urbain": 54, "age_med": 23, "tourisme": 1.0, "ido": 49, "rail": 2382, "alpha": 92, "nobel": 0 },
+      { "name": "Venezuela", "iso": "VE", "pop": 29000000, "pib": 95, "fifa": 66, "alt": 4981, "cote": 2800, "unesco": 3, "surf": 912050, "vie": 72, "dens": 32, "front": 7, "pib_hab": 2972, "jo": 19, "co2": 2.1, "urbain": 89, "age_med": 30, "tourisme": 0.5, "ido": 13, "rail": 447, "alpha": 97, "nobel": 0 },
+      { "name": "Équateur", "iso": "EC", "pop": 18000000, "pib": 118, "fifa": 44, "alt": 6263, "cote": 2237, "unesco": 5, "surf": 283561, "vie": 77, "dens": 64, "front": 2, "pib_hab": 7384, "jo": 10, "co2": 2.5, "urbain": 65, "age_med": 29, "tourisme": 2.0, "ido": 34, "rail": 965, "alpha": 94, "nobel": 0 },
+      { "name": "Bolivie", "iso": "BO", "pop": 12000000, "pib": 44, "fifa": 85, "alt": 6542, "cote": 0, "unesco": 7, "surf": 1098581, "vie": 72, "dens": 11, "front": 5, "pib_hab": 4585, "jo": 0, "co2": 1.9, "urbain": 71, "age_med": 25, "tourisme": 0.8, "ido": 29, "rail": 3960, "alpha": 93, "nobel": 0 },
+      { "name": "Paraguay", "iso": "PY", "pop": 7400000, "pib": 43, "fifa": 70, "alt": 842, "cote": 0, "unesco": 1, "surf": 406752, "vie": 74, "dens": 18, "front": 3, "pib_hab": 7324, "jo": 1, "co2": 1.5, "urbain": 63, "age_med": 27, "tourisme": 1.2, "ido": 28, "rail": 30, "alpha": 95, "nobel": 0 },
+      { "name": "Uruguay", "iso": "UY", "pop": 3400000, "pib": 77, "fifa": 18, "alt": 514, "cote": 660, "unesco": 3, "surf": 176215, "vie": 78, "dens": 19, "front": 2, "pib_hab": 26041, "jo": 10, "co2": 2.3, "urbain": 96, "age_med": 36, "tourisme": 3.5, "ido": 73, "rail": 1641, "alpha": 99, "nobel": 2 },
+      { "name": "Cuba", "iso": "CU", "pop": 11000000, "pib": 107, "fifa": 178, "alt": 1974, "cote": 3735, "unesco": 9, "surf": 109884, "vie": 78, "dens": 100, "front": 0, "pib_hab": 22000, "jo": 244, "co2": 2.1, "urbain": 78, "age_med": 43, "tourisme": 3.0, "ido": 44, "rail": 8226, "alpha": 99, "nobel": 0 },
+      { "name": "Guatemala", "iso": "GT", "pop": 17000000, "pib": 95, "fifa": 91, "alt": 4220, "cote": 400, "unesco": 3, "surf": 108889, "vie": 74, "dens": 156, "front": 4, "pib_hab": 6851, "jo": 3, "co2": 1.0, "urbain": 53, "age_med": 23, "tourisme": 2.0, "ido": 23, "rail": 800, "alpha": 84, "nobel": 1 },
+      { "name": "Honduras", "iso": "HN", "pop": 10000000, "pib": 32, "fifa": 76, "alt": 2870, "cote": 820, "unesco": 1, "surf": 112492, "vie": 73, "dens": 89, "front": 4, "pib_hab": 3699, "jo": 0, "co2": 1.0, "urbain": 60, "age_med": 24, "tourisme": 0.8, "ido": 23, "rail": 700, "alpha": 88, "nobel": 0 },
+      { "name": "Costa Rica", "iso": "CR", "pop": 5200000, "pib": 70, "fifa": 54, "alt": 3821, "cote": 1290, "unesco": 4, "surf": 51100, "vie": 80, "dens": 102, "front": 2, "pib_hab": 20134, "jo": 4, "co2": 1.7, "urbain": 84, "age_med": 35, "tourisme": 3.1, "ido": 54, "rail": 278, "alpha": 98, "nobel": 0 },
+      { "name": "Panama", "iso": "PA", "pop": 4400000, "pib": 77, "fifa": 82, "alt": 3475, "cote": 2490, "unesco": 5, "surf": 75417, "vie": 78, "dens": 58, "front": 2, "pib_hab": 20754, "jo": 4, "co2": 2.3, "urbain": 70, "age_med": 30, "tourisme": 2.1, "ido": 35, "rail": 76, "alpha": 96, "nobel": 0 },
+      { "name": "Pakistan", "iso": "PK", "pop": 230000000, "pib": 375, "fifa": 133, "alt": 8611, "cote": 1046, "unesco": 6, "surf": 881913, "vie": 67, "dens": 261, "front": 6, "pib_hab": 1707, "jo": 11, "co2": 0.9, "urbain": 38, "age_med": 21, "tourisme": 0.5, "ido": 28, "rail": 11881, "alpha": 58, "nobel": 2 },
+      { "name": "Bangladesh", "iso": "BD", "pop": 170000000, "pib": 460, "fifa": 188, "alt": 1064, "cote": 580, "unesco": 3, "surf": 147570, "vie": 73, "dens": 1153, "front": 2, "pib_hab": 2960, "jo": 0, "co2": 0.6, "urbain": 40, "age_med": 29, "tourisme": 0.8, "ido": 24, "rail": 2877, "alpha": 76, "nobel": 1 },
+      { "name": "Philippines", "iso": "PH", "pop": 115000000, "pib": 440, "fifa": 136, "alt": 2954, "cote": 36289, "unesco": 6, "surf": 300000, "vie": 71, "dens": 383, "front": 0, "pib_hab": 4619, "jo": 18, "co2": 1.2, "urbain": 48, "age_med": 25, "tourisme": 5.5, "ido": 34, "rail": 77, "alpha": 97, "nobel": 0 },
+      { "name": "Malaisie", "iso": "MY", "pop": 33000000, "pib": 430, "fifa": 130, "alt": 4095, "cote": 4675, "unesco": 4, "surf": 329847, "vie": 76, "dens": 100, "front": 11, "pib_hab": 14762, "jo": 15, "co2": 8.1, "urbain": 78, "age_med": 30, "tourisme": 26.0, "ido": 50, "rail": 1666, "alpha": 95, "nobel": 0 },
+      { "name": "Sri Lanka", "iso": "LK", "pop": 22000000, "pib": 84, "fifa": 206, "alt": 2524, "cote": 1340, "unesco": 8, "surf": 65610, "vie": 77, "dens": 335, "front": 0, "pib_hab": 4325, "jo": 2, "co2": 0.9, "urbain": 19, "age_med": 33, "tourisme": 1.5, "ido": 34, "rail": 1447, "alpha": 93, "nobel": 0 },
+      { "name": "Népal", "iso": "NP", "pop": 30000000, "pib": 40, "fifa": 172, "alt": 8849, "cote": 0, "unesco": 4, "surf": 147181, "vie": 71, "dens": 204, "front": 2, "pib_hab": 1658, "jo": 0, "co2": 0.5, "urbain": 22, "age_med": 26, "tourisme": 1.0, "ido": 35, "rail": 59, "alpha": 67, "nobel": 0 },
+      { "name": "Kazakhstan", "iso": "KZ", "pop": 19000000, "pib": 260, "fifa": 109, "alt": 7010, "cote": 0, "unesco": 6, "surf": 2724900, "vie": 73, "dens": 7, "front": 5, "pib_hab": 15527, "jo": 78, "co2": 15.0, "urbain": 59, "age_med": 32, "tourisme": 7.0, "ido": 39, "rail": 16900, "alpha": 99, "nobel": 0 },
+      { "name": "Iran", "iso": "IR", "pop": 87000000, "pib": 367, "fifa": 21, "alt": 5671, "cote": 2440, "unesco": 27, "surf": 1648195, "vie": 77, "dens": 53, "front": 7, "pib_hab": 4250, "jo": 88, "co2": 8.4, "urbain": 77, "age_med": 33, "tourisme": 4.0, "ido": 24, "rail": 12200, "alpha": 88, "nobel": 2 },
+      { "name": "Irak", "iso": "IQ", "pop": 42000000, "pib": 268, "fifa": 64, "alt": 3607, "cote": 58, "unesco": 6, "surf": 438317, "vie": 71, "dens": 96, "front": 6, "pib_hab": 5873, "jo": 1, "co2": 4.6, "urbain": 72, "age_med": 21, "tourisme": 1.5, "ido": 23, "rail": 3000, "alpha": 85, "nobel": 0 },
+      { "name": "Jordanie", "iso": "JO", "pop": 10000000, "pib": 50, "fifa": 87, "alt": 1854, "cote": 26, "unesco": 6, "surf": 89342, "vie": 75, "dens": 112, "front": 5, "pib_hab": 5149, "jo": 4, "co2": 2.5, "urbain": 92, "age_med": 24, "tourisme": 3.7, "ido": 49, "rail": 507, "alpha": 98, "nobel": 0 },
+      { "name": "Qatar", "iso": "QA", "pop": 2900000, "pib": 237, "fifa": 37, "alt": 103, "cote": 563, "unesco": 1, "surf": 11586, "vie": 80, "dens": 250, "front": 1, "pib_hab": 76534, "jo": 9, "co2": 35.6, "urbain": 99, "age_med": 33, "tourisme": 4.1, "ido": 58, "rail": 76, "alpha": 93, "nobel": 0 },
+      { "name": "Mongolie", "iso": "MN", "pop": 3400000, "pib": 20, "fifa": 183, "alt": 4374, "cote": 0, "unesco": 4, "surf": 1564116, "vie": 71, "dens": 2.2, "front": 2, "pib_hab": 7320, "jo": 31, "co2": 9.7, "urbain": 70, "age_med": 29, "tourisme": 0.5, "ido": 38, "rail": 1810, "alpha": 99, "nobel": 0 },
+      { "name": "Myanmar", "iso": "MM", "pop": 54000000, "pib": 65, "fifa": 158, "alt": 5881, "cote": 1930, "unesco": 2, "surf": 676578, "vie": 65, "dens": 80, "front": 5, "pib_hab": 1176, "jo": 0, "co2": 0.5, "urbain": 32, "age_med": 29, "tourisme": 0.5, "ido": 20, "rail": 3955, "alpha": 90, "nobel": 0 },
+      { "name": "Singapour", "iso": "SG", "pop": 5900000, "pib": 501, "fifa": 161, "alt": 163, "cote": 193, "unesco": 1, "surf": 728, "vie": 84, "dens": 8100, "front": 0, "pib_hab": 99042, "jo": 6, "co2": 8.2, "urbain": 100, "age_med": 43, "tourisme": 13.6, "ido": 83, "rail": 164, "alpha": 97, "nobel": 0 },
+      { "name": "Papouasie-Nouvelle-Guinée", "iso": "PG", "pop": 10000000, "pib": 30, "fifa": 155, "alt": 4509, "cote": 5152, "unesco": 1, "surf": 462840, "vie": 65, "dens": 22, "front": 1, "pib_hab": 2560, "jo": 0, "co2": 0.6, "urbain": 14, "age_med": 23, "tourisme": 0.2, "ido": 30, "rail": 0, "alpha": 64, "nobel": 0 },
+      { "name": "Fidji", "iso": "FJ", "pop": 930000, "pib": 5, "fifa": 165, "alt": 1324, "cote": 1129, "unesco": 1, "surf": 18274, "vie": 67, "dens": 51, "front": 0, "pib_hab": 7170, "jo": 4, "co2": 1.7, "urbain": 59, "age_med": 28, "tourisme": 0.9, "ido": 54, "rail": 595, "alpha": 99, "nobel": 0 }
+    ]
+    const CATEGORIES = [
+      { key: "pop", label: "Population", unit: "hab.", icon: "👥", fmt: v => v.toLocaleString("fr-FR") + " hab." },
+      { key: "pib", label: "PIB nominal", unit: "Md$", icon: "💰", fmt: v => v.toLocaleString("fr-FR") + " Md$" },
+      { key: "fifa", label: "Classement FIFA", unit: "rang", icon: "⚽", fmt: v => "#" + v, note: "Plus le rang est bas, meilleure est l'équipe" },
+      { key: "alt", label: "Point culminant", unit: "m", icon: "⛰️", fmt: v => v.toLocaleString("fr-FR") + " m" },
+      { key: "cote", label: "Longueur des côtes", unit: "km", icon: "🌊", fmt: v => v.toLocaleString("fr-FR") + " km" },
+      { key: "unesco", label: "Sites UNESCO", unit: "sites", icon: "🏛️", fmt: v => v + " site" + (v > 1 ? "s" : "") },
+      { key: "surf", label: "Superficie", unit: "km²", icon: "🗺️", fmt: v => v.toLocaleString("fr-FR") + " km²" },
+      { key: "vie", label: "Espérance de vie", unit: "ans", icon: "❤️", fmt: v => v + " ans" },
+      { key: "dens", label: "Densité de population", unit: "hab/km²", icon: "🏙️", fmt: v => v + " hab/km²" },
+      { key: "front", label: "Pays frontaliers", unit: "voisins", icon: "🧭", fmt: v => v + " voisin" + (v > 1 ? "s" : "") },
+      { key: "pib_hab", label: "PIB par habitant", unit: "$", icon: "💵", fmt: v => "$" + v.toLocaleString("fr-FR") },
+      { key: "jo", label: "Médailles JO d'été", unit: "médailles", icon: "🏅", fmt: v => v + " médaille" + (v > 1 ? "s" : ""), note: "Total 1896–2024" },
+      { key: "co2", label: "CO₂ par habitant", unit: "t/an", icon: "🌫️", fmt: v => v.toFixed(1) + " t/hab/an" },
+      { key: "urbain", label: "Taux d'urbanisation", unit: "%", icon: "🏙️", fmt: v => v + "%" },
+      { key: "age_med", label: "Âge médian", unit: "ans", icon: "📅", fmt: v => v + " ans" },
+      { key: "tourisme", label: "Visiteurs internationaux", unit: "M/an", icon: "✈️", fmt: v => v.toLocaleString("fr-FR") + " M visiteurs/an" },
+      { key: "ido", label: "Indice de corruption TI", unit: "/100", icon: "🔎", fmt: v => v + "/100", note: "100 = très peu corrompu (TI CPI 2023)" },
+      { key: "rail", label: "Réseau ferroviaire", unit: "km", icon: "🚂", fmt: v => v.toLocaleString("fr-FR") + " km" },
+      { key: "alpha", label: "Taux d'alphabétisation", unit: "%", icon: "📚", fmt: v => v + "%" },
+      { key: "nobel", label: "Prix Nobel", unit: "lauréats", icon: "🏆", fmt: v => v + " lauréat" + (v > 1 ? "s" : "") }
+    ];
 
-/* ========== ÉTAT ========== */
-let currentCat = null;
+    /* ========== ÉTAT ========== */
+    let currentCat = null;
 
-function flag(iso){
-  return iso.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
-}
+    function flag(iso) {
+      return iso.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
+    }
 
-/* ========== TIRAGE CATÉGORIE ========== */
-document.getElementById("btn-draw").addEventListener("click", () => {
-  // exclure la catégorie actuelle du tirage
-  const pool = currentCat ? CATEGORIES.filter(c => c.key !== currentCat.key) : CATEGORIES;
-  currentCat = pool[Math.floor(Math.random() * pool.length)];
+    /* ========== TIRAGE CATÉGORIE ========== */
+    document.getElementById("btn-draw").addEventListener("click", () => {
+      // exclure la catégorie actuelle du tirage
+      const pool = currentCat ? CATEGORIES.filter(c => c.key !== currentCat.key) : CATEGORIES;
+      currentCat = pool[Math.floor(Math.random() * pool.length)];
 
-  const card = document.getElementById("cat-card");
-  card.className = "cat-card filled";
-  card.innerHTML = `
+      const card = document.getElementById("cat-card");
+      card.className = "cat-card filled";
+      card.innerHTML = `
     <div class="cat-icon">${currentCat.icon}</div>
     <div class="cat-name">${currentCat.label}</div>
     <div class="cat-desc">${currentCat.note || "Classe les pays du plus petit au plus grand"}</div>
   `;
 
-  // rafraîchir les résultats si une recherche est en cours
-  renderResults(document.getElementById("search-input").value.trim());
-});
+      // rafraîchir les résultats si une recherche est en cours
+      renderResults(document.getElementById("search-input").value.trim());
+    });
 
-/* ========== RECHERCHE ========== */
-document.getElementById("search-input").addEventListener("input", e => {
-  renderResults(e.target.value.trim());
-});
+    /* ========== RECHERCHE ========== */
+    document.getElementById("search-input").addEventListener("input", e => {
+      renderResults(e.target.value.trim());
+    });
 
-function normalize(str){
-  return str.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[-'\s]/g, "");
-}
+    function normalize(str) {
+      return str.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[-'\s]/g, "");
+    }
 
-function renderResults(query){
-  const el = document.getElementById("results");
-  el.innerHTML = "";
+    function renderResults(query) {
+      const el = document.getElementById("results");
+      el.innerHTML = "";
 
-  if(!currentCat){
-    el.innerHTML = `<div class="no-cat-hint">Tire d'abord une catégorie</div>`;
-    return;
-  }
-  if(query.length < 4){
-    return;
-  }
+      if (!currentCat) {
+        el.innerHTML = `<div class="no-cat-hint">Tire d'abord une catégorie</div>`;
+        return;
+      }
+      if (query.length < 4) {
+        return;
+      }
 
-  const q = normalize(query);
-  const matches = COUNTRIES.filter(c => normalize(c.name).includes(q)).slice(0, 8);
+      const q = normalize(query);
+      const matches = COUNTRIES.filter(c => normalize(c.name).includes(q)).slice(0, 8);
 
-  if(matches.length === 0){
-    el.innerHTML = `<div class="no-result">Aucun pays trouvé pour « ${query} »</div>`;
-    return;
-  }
+      if (matches.length === 0) {
+        el.innerHTML = `<div class="no-result">Aucun pays trouvé pour « ${query} »</div>`;
+        return;
+      }
 
-  matches.forEach(c => {
-    const card = document.createElement("div");
-    card.className = "result-card";
-    card.innerHTML = `
+      matches.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "result-card";
+        card.innerHTML = `
       <div class="result-flag">${flag(c.iso)}</div>
       <div class="result-body">
         <div class="result-name">${c.name}</div>
@@ -396,37 +558,38 @@ function renderResults(query){
       </div>
       <div class="result-value">${currentCat.fmt(c[currentCat.key])}</div>
     `;
-    card.addEventListener("click", () => openModal(c));
-    el.appendChild(card);
-  });
-}
+        card.addEventListener("click", () => openModal(c));
+        el.appendChild(card);
+      });
+    }
 
-/* ========== MODAL détail ========== */
-function openModal(country){
-  document.getElementById("m-flag").textContent = flag(country.iso);
-  document.getElementById("m-name").textContent = country.name;
+    /* ========== MODAL détail ========== */
+    function openModal(country) {
+      document.getElementById("m-flag").textContent = flag(country.iso);
+      document.getElementById("m-name").textContent = country.name;
 
-  const rows = document.getElementById("m-rows");
-  rows.innerHTML = "";
+      const rows = document.getElementById("m-rows");
+      rows.innerHTML = "";
 
-  CATEGORIES.forEach(cat => {
-    const isActive = currentCat && cat.key === currentCat.key;
-    const row = document.createElement("div");
-    row.className = "modal-row";
-    row.innerHTML = `
+      CATEGORIES.forEach(cat => {
+        const isActive = currentCat && cat.key === currentCat.key;
+        const row = document.createElement("div");
+        row.className = "modal-row";
+        row.innerHTML = `
       <div class="modal-row-label">${cat.icon} ${cat.label}</div>
       <div class="modal-row-value${isActive ? " highlight" : ""}">${cat.fmt(country[cat.key])}</div>
     `;
-    rows.appendChild(row);
-  });
+        rows.appendChild(row);
+      });
 
-  document.getElementById("modal").classList.add("open");
-}
+      document.getElementById("modal").classList.add("open");
+    }
 
-function closeModal(e){
-  if(e.target === document.getElementById("modal"))
-    document.getElementById("modal").classList.remove("open");
-}
-</script>
+    function closeModal(e) {
+      if (e.target === document.getElementById("modal"))
+        document.getElementById("modal").classList.remove("open");
+    }
+  </script>
 </body>
+
 </html>
