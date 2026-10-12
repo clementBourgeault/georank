@@ -167,8 +167,20 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    margin-bottom: 28px;
+    margin-bottom: 10px;
   }
+  #libre-src { margin-bottom: 18px; min-height: 1em; text-align: center; }
+
+  /* ---- SOURCES (discrètes) ---- */
+  .src-line {
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .src-line a { color: inherit; text-decoration: underline dotted; text-underline-offset: 2px; }
+  .src-line a:hover { color: var(--text); }
+  .modal-row-label .src-line { margin-top: 2px; }
   .cat-grid-item {
     background: var(--card);
     border: 2px solid var(--border);
@@ -395,7 +407,7 @@
     border-bottom: 1px solid var(--border);
   }
   .modal-row:last-child { border-bottom: none; }
-  .modal-row-label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+  .modal-row-label { font-size: 0.9rem; color: var(--muted); padding-right: 10px; }
   .modal-row-value { font-weight: 700; font-size: 1rem; }
   .modal-row-value.highlight { color: var(--gold); font-size: 1.2rem; }
   .modal-close {
@@ -434,14 +446,29 @@
 <div id="section-libre">
   <div class="section-label">Choisir une catégorie</div>
   <div class="cat-grid" id="cat-grid"></div>
+  <div class="src-line" id="libre-src"></div>
 </div>
 
 <!-- ===== MODE CLASSIQUE ===== -->
 <div id="section-classique" style="display:none">
   <div class="cat-section">
-    <div class="classique-meta">
+    <div id="classique-setup">
+      <div class="section-label">Nombre de manches</div>
+      <div class="multi-picker">
+        <div class="multi-picker-label">
+          <strong id="rounds-label">15 manches</strong>
+          une catégorie différente à chaque manche
+        </div>
+        <div class="multi-stepper">
+          <button class="stepper-btn" id="btn-rounds-minus" onclick="changeRounds(-1)">−</button>
+          <div class="stepper-val" id="rounds-val">15</div>
+          <button class="stepper-btn" id="btn-rounds-plus" onclick="changeRounds(1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="classique-meta" id="classique-meta" style="display:none">
       <div class="section-label" style="margin-bottom:0">Catégorie en cours</div>
-      <div class="classique-counter"><span id="classique-used">0</span>/20 utilisées</div>
+      <div class="classique-counter">Manche <span id="classique-used">0</span>/<span id="classique-total">15</span></div>
     </div>
     <div class="cat-card empty" id="cat-card-classique">
       <div class="cat-icon">🎲</div>
@@ -498,130 +525,179 @@
 <script>
 /* ========== DONNÉES ========== */
 const COUNTRIES = [
-  {name:"France",       iso:"FR", pop:68000000,    pib:3030,  fifa:2,   alt:4809,  cote:3427,  unesco:53, surf:551695,   vie:82.5, dens:124,  front:8, pib_hab:51708, jo:816, co2:4.7, urbain:81, age_med:42, tourisme:100.0, ido:71, rail:28100, alpha:99, nobel:70},
-  {name:"Allemagne",    iso:"DE", pop:84000000,    pib:4460,  fifa:16,  alt:2962,  cote:2389,  unesco:52, surf:357386,   vie:81,   dens:235,  front:9, pib_hab:63600, jo:688, co2:8.1, urbain:78, age_med:47, tourisme:35.0, ido:78, rail:33400, alpha:99, nobel:115},
-  {name:"Espagne",      iso:"ES", pop:47000000,    pib:1580,  fifa:8,   alt:3715,  cote:4964,  unesco:50, surf:505990,   vie:83.5, dens:93,   front:4, pib_hab:40582, jo:187, co2:5.5, urbain:81, age_med:46, tourisme:85.0, ido:60, rail:15980, alpha:98, nobel:8},
-  {name:"Italie",       iso:"IT", pop:59000000,    pib:2190,  fifa:9,   alt:4810,  cote:7600,  unesco:59, surf:301340,   vie:83,   dens:196,  front:6, pib_hab:45883, jo:658, co2:5.7, urbain:72, age_med:48, tourisme:57.0, ido:56, rail:16736, alpha:99, nobel:21},
-  {name:"Royaume-Uni",  iso:"GB", pop:67000000,    pib:3340,  fifa:4,   alt:1345,  cote:12429, unesco:33, surf:243610,   vie:81,   dens:275,  front:1, pib_hab:60011, jo:980, co2:4.6, urbain:84, age_med:40, tourisme:38.0, ido:71, rail:16193, alpha:99, nobel:137},
-  {name:"Portugal",     iso:"PT", pop:10300000,    pib:270,   fifa:6,   alt:2351,  cote:1793,  unesco:17, surf:92212,    vie:81.5, dens:112,  front:1, pib_hab:33972, jo:32, co2:4.3, urbain:68, age_med:46, tourisme:17.0, ido:62, rail:2526, alpha:95, nobel:2},
-  {name:"Belgique",     iso:"BE", pop:11700000,    pib:627,   fifa:3,   alt:694,   cote:67,    unesco:16, surf:30528,    vie:82,   dens:384,  front:4, pib_hab:63896, jo:167, co2:8.3, urbain:98, age_med:41, tourisme:9.0, ido:73, rail:3623, alpha:99, nobel:11},
-  {name:"Pays-Bas",     iso:"NL", pop:17900000,    pib:1090,  fifa:7,   alt:322,   cote:451,   unesco:13, surf:41543,    vie:82,   dens:431,  front:2, pib_hab:77881, jo:356, co2:8.9, urbain:93, age_med:42, tourisme:20.0, ido:79, rail:3058, alpha:99, nobel:22},
-  {name:"Suisse",       iso:"CH", pop:8800000,     pib:905,   fifa:19,  alt:4634,  cote:0,     unesco:13, surf:41285,    vie:84,   dens:213,  front:5, pib_hab:118173, jo:214, co2:4.3, urbain:74, age_med:43, tourisme:12.0, ido:82, rail:5317, alpha:99, nobel:27},
-  {name:"Suède",        iso:"SE", pop:10500000,    pib:593,   fifa:25,  alt:2097,  cote:3218,  unesco:15, surf:450295,   vie:83,   dens:23,   front:2, pib_hab:66124, jo:514, co2:3.9, urbain:88, age_med:41, tourisme:7.0, ido:82, rail:10940, alpha:99, nobel:32},
-  {name:"Norvège",      iso:"NO", pop:5500000,     pib:485,   fifa:45,  alt:2469,  cote:25148, unesco:8,  surf:385207,   vie:83,   dens:14,   front:3, pib_hab:96580, jo:171, co2:7.8, urbain:83, age_med:40, tourisme:5.0, ido:84, rail:4200, alpha:99, nobel:13},
-  {name:"Finlande",     iso:"FI", pop:5500000,     pib:300,   fifa:60,  alt:1324,  cote:1250,  unesco:7,  surf:338424,   vie:82,   dens:16,   front:3, pib_hab:59750, jo:305, co2:7.1, urbain:85, age_med:43, tourisme:3.0, ido:87, rail:5920, alpha:99, nobel:4},
-  {name:"Pologne",      iso:"PL", pop:37700000,    pib:842,   fifa:28,  alt:2499,  cote:440,   unesco:17, surf:312696,   vie:78,   dens:120,  front:7, pib_hab:30651, jo:308, co2:8.3, urbain:61, age_med:42, tourisme:20.0, ido:54, rail:19460, alpha:99, nobel:19},
-  {name:"Grèce",        iso:"GR", pop:10400000,    pib:238,   fifa:49,  alt:2917,  cote:13676, unesco:18, surf:131957,   vie:81.5, dens:79,   front:4, pib_hab:29412, jo:129, co2:5.4, urbain:80, age_med:46, tourisme:33.0, ido:49, rail:2532, alpha:97, nobel:2},
-  {name:"Russie",       iso:"RU", pop:144000000,   pib:2020,  fifa:33,  alt:5642,  cote:37653, unesco:31, surf:17098242, vie:73,   dens:8,    front:14, pib_hab:17287, jo:422, co2:12.3, urbain:75, age_med:41, tourisme:15.0, ido:26, rail:86000, alpha:99, nobel:32},
-  {name:"Turquie",      iso:"TR", pop:85000000,    pib:1110,  fifa:26,  alt:5137,  cote:7200,  unesco:19, surf:783562,   vie:78,   dens:109,  front:8, pib_hab:18232, jo:111, co2:4.9, urbain:77, age_med:33, tourisme:57.0, ido:34, rail:13300, alpha:96, nobel:2},
-  {name:"Ukraine",      iso:"UA", pop:38000000,    pib:178,   fifa:22,  alt:2061,  cote:2782,  unesco:8,  surf:603628,   vie:71,   dens:63,   front:7, pib_hab:6718, jo:151, co2:4.0, urbain:70, age_med:43, tourisme:1.0, ido:36, rail:20400, alpha:99, nobel:3},
-  {name:"États-Unis",   iso:"US", pop:335000000,   pib:27000, fifa:11,  alt:6190,  cote:19924, unesco:24, surf:9833517,  vie:79,   dens:34,   front:2, pib_hab:92883, jo:2765, co2:14.9, urbain:83, age_med:38, tourisme:66.0, ido:69, rail:148000, alpha:99, nobel:400},
-  {name:"Canada",       iso:"CA", pop:39000000,    pib:2140,  fifa:48,  alt:5959,  cote:202080,unesco:22, surf:9984670,  vie:82.5, dens:4,    front:1, pib_hab:58244, jo:353, co2:14.3, urbain:82, age_med:41, tourisme:22.0, ido:76, rail:40000, alpha:99, nobel:28},
-  {name:"Mexique",      iso:"MX", pop:128000000,   pib:1810,  fifa:14,  alt:5636,  cote:9330,  unesco:35, surf:1964375,  vie:75,   dens:65,   front:3, pib_hab:15111, jo:77, co2:3.5, urbain:82, age_med:29, tourisme:42.0, ido:31, rail:8360, alpha:95, nobel:2},
-  {name:"Brésil",       iso:"BR", pop:216000000,   pib:2170,  fifa:5,   alt:2995,  cote:7491,  unesco:23, surf:8515767,  vie:76,   dens:25,   front:10, pib_hab:10709, jo:170, co2:2.2, urbain:88, age_med:33, tourisme:7.0, ido:36, rail:29074, alpha:94, nobel:1},
-  {name:"Argentine",    iso:"AR", pop:46000000,    pib:640,   fifa:1,   alt:6961,  cote:4989,  unesco:12, surf:2780400,  vie:77,   dens:17,   front:5, pib_hab:13895, jo:80, co2:4.3, urbain:93, age_med:32, tourisme:7.0, ido:37, rail:36000, alpha:99, nobel:5},
-  {name:"Chili",        iso:"CL", pop:19600000,    pib:335,   fifa:42,  alt:6893,  cote:6435,  unesco:7,  surf:756102,   vie:80,   dens:26,   front:3, pib_hab:17876, jo:15, co2:4.5, urbain:88, age_med:36, tourisme:6.0, ido:66, rail:7282, alpha:97, nobel:2},
-  {name:"Colombie",     iso:"CO", pop:52000000,    pib:364,   fifa:12,  alt:5700,  cote:3208,  unesco:9,  surf:1141748,  vie:77,   dens:46,   front:5, pib_hab:8644, jo:38, co2:1.7, urbain:83, age_med:32, tourisme:6.0, ido:41, rail:150, alpha:95, nobel:1},
-  {name:"Pérou",        iso:"PE", pop:34000000,    pib:268,   fifa:35,  alt:6768,  cote:2414,  unesco:13, surf:1285216,  vie:77,   dens:26,   front:5, pib_hab:9398, jo:5, co2:1.6, urbain:79, age_med:30, tourisme:4.0, ido:33, rail:1854, alpha:94, nobel:1},
-  {name:"Chine",        iso:"CN", pop:1410000000,  pib:17800, fifa:79,  alt:8849,  cote:14500, unesco:57, surf:9596961,  vie:78.5, dens:147,  front:14, pib_hab:14730, jo:727, co2:8.0, urbain:66, age_med:39, tourisme:26.0, ido:42, rail:150000, alpha:96, nobel:12},
-  {name:"Japon",        iso:"JP", pop:124000000,   pib:4200,  fifa:17,  alt:3776,  cote:29751, unesco:25, surf:377975,   vie:84.5, dens:328,  front:0, pib_hab:36391, jo:542, co2:8.5, urbain:92, age_med:49, tourisme:25.0, ido:73, rail:27000, alpha:99, nobel:29},
-  {name:"Corée du Sud", iso:"KR", pop:51700000,    pib:1710,  fifa:23,  alt:1947,  cote:2413,  unesco:16, surf:100210,   vie:83.5, dens:517,  front:1, pib_hab:37523, jo:320, co2:11.6, urbain:82, age_med:44, tourisme:11.0, ido:63, rail:4082, alpha:99, nobel:2},
-  {name:"Inde",         iso:"IN", pop:1428000000,  pib:3730,  fifa:117, alt:8586,  cote:7000,  unesco:42, surf:3287263,  vie:70,   dens:434,  front:6, pib_hab:3051, jo:41, co2:2.0, urbain:36, age_med:29, tourisme:9.0, ido:39, rail:67956, alpha:77, nobel:12},
-  {name:"Indonésie",    iso:"ID", pop:277000000,   pib:1370,  fifa:134, alt:4884,  cote:54716, unesco:10, surf:1904569,  vie:72,   dens:145,  front:3, pib_hab:5398, jo:40, co2:2.3, urbain:59, age_med:30, tourisme:12.0, ido:34, rail:8159, alpha:96, nobel:0},
-  {name:"Thaïlande",    iso:"TH", pop:71800000,    pib:514,   fifa:113, alt:2565,  cote:3219,  unesco:7,  surf:513120,   vie:77,   dens:140,  front:4, pib_hab:7979, jo:41, co2:3.9, urbain:52, age_med:40, tourisme:28.0, ido:35, rail:4041, alpha:95, nobel:0},
-  {name:"Vietnam",      iso:"VN", pop:99000000,    pib:433,   fifa:116, alt:3147,  cote:3444,  unesco:8,  surf:331212,   vie:75.5, dens:299,  front:3, pib_hab:4965, jo:5, co2:3.7, urbain:39, age_med:33, tourisme:13.0, ido:41, rail:2632, alpha:95, nobel:0},
-  {name:"Arabie Saoudite",iso:"SA",pop:36000000,   pib:1070,  fifa:56,  alt:3133,  cote:2640,  unesco:7,  surf:2149690,  vie:77,   dens:17,   front:7, pib_hab:35839, jo:4, co2:18.7, urbain:85, age_med:30, tourisme:16.0, ido:52, rail:1390, alpha:97, nobel:0},
-  {name:"Émirats arabes unis",iso:"AE",pop:9500000,pib:509,   fifa:67,  alt:1934,  cote:1318,  unesco:1,  surf:83600,    vie:79,   dens:114,  front:2, pib_hab:53842, jo:2, co2:19.4, urbain:87, age_med:34, tourisme:24.0, ido:68, rail:150, alpha:96, nobel:0},
-  {name:"Israël",       iso:"IL", pop:9400000,     pib:522,   fifa:80,  alt:1208,  cote:273,   unesco:9,  surf:22072,    vie:83,   dens:425,  front:4, pib_hab:64275, jo:20, co2:7.1, urbain:93, age_med:30, tourisme:4.0, ido:62, rail:1404, alpha:97, nobel:14},
-  {name:"Égypte",       iso:"EG", pop:112000000,   pib:387,   fifa:34,  alt:2629,  cote:2450,  unesco:7,  surf:1002450,  vie:72,   dens:112,  front:4, pib_hab:3579, jo:41, co2:2.5, urbain:43, age_med:25, tourisme:14.0, ido:35, rail:5290, alpha:75, nobel:4},
-  {name:"Maroc",        iso:"MA", pop:37800000,    pib:142,   fifa:13,  alt:4167,  cote:1835,  unesco:9,  surf:446550,   vie:77,   dens:85,   front:3, pib_hab:5154, jo:26, co2:1.8, urbain:64, age_med:31, tourisme:15.0, ido:38, rail:1907, alpha:76, nobel:0},
-  {name:"Algérie",      iso:"DZ", pop:45600000,    pib:239,   fifa:39,  alt:3003,  cote:998,   unesco:7,  surf:2381741,  vie:77,   dens:19,   front:7, pib_hab:5956, jo:20, co2:3.8, urbain:75, age_med:29, tourisme:4.0, ido:33, rail:4100, alpha:82, nobel:0},
-  {name:"Nigeria",      iso:"NG", pop:223000000,   pib:390,   fifa:32,  alt:2419,  cote:853,   unesco:2,  surf:923768,   vie:55,   dens:241,  front:4, pib_hab:1378, jo:27, co2:0.5, urbain:54, age_med:18, tourisme:2.0, ido:25, rail:3900, alpha:62, nobel:2},
-  {name:"Afrique du Sud",iso:"ZA",pop:60000000,    pib:380,   fifa:61,  alt:3450,  cote:2798,  unesco:10, surf:1221037,  vie:65,   dens:49,   front:6, pib_hab:6835, jo:95, co2:7.8, urbain:68, age_med:28, tourisme:9.0, ido:41, rail:22051, alpha:87, nobel:5},
-  {name:"Kenya",        iso:"KE", pop:55000000,    pib:118,   fifa:89,  alt:5199,  cote:536,   unesco:7,  surf:580367,   vie:67,   dens:95,   front:5, pib_hab:2596, jo:124, co2:0.3, urbain:30, age_med:20, tourisme:2.0, ido:32, rail:590, alpha:82, nobel:1},
-  {name:"Éthiopie",     iso:"ET", pop:126000000,   pib:156,   fifa:141, alt:4550,  cote:0,     unesco:9,  surf:1104300,  vie:67,   dens:114,  front:6, pib_hab:1124, jo:62, co2:0.1, urbain:24, age_med:19, tourisme:1.0, ido:35, rail:659, alpha:52, nobel:1},
-  {name:"Australie",    iso:"AU", pop:26600000,    pib:1690,  fifa:24,  alt:2228,  cote:25760, unesco:20, surf:7692024,  vie:83.5, dens:3.5,  front:0, pib_hab:69358, jo:600, co2:14.8, urbain:86, age_med:38, tourisme:9.0, ido:75, rail:32000, alpha:99, nobel:15},
-  {name:"Nouvelle-Zélande",iso:"NZ",pop:5200000,   pib:247,   fifa:91,  alt:3724,  cote:15134, unesco:3,  surf:268838,   vie:82.5, dens:19,   front:0, pib_hab:52181, jo:157, co2:7.8, urbain:87, age_med:38, tourisme:4.0, ido:85, rail:3898, alpha:99, nobel:3},
-  {name:"Islande",      iso:"IS", pop:390000,      pib:31,    fifa:73,  alt:2110,  cote:4970,  unesco:3,  surf:103000,   vie:83,   dens:3.8,  front:0, pib_hab:108591, jo:4, co2:8.7, urbain:94, age_med:37, tourisme:2.1, ido:77, rail:0, alpha:99, nobel:1},
-  {name:"Irlande",      iso:"IE", pop:5100000,     pib:545,   fifa:62,  alt:1038,  cote:1448,  unesco:2,  surf:70273,    vie:82.5, dens:73,   front:1, pib_hab:135247, jo:42, co2:7.3, urbain:64, age_med:38, tourisme:10.0, ido:77, rail:1700, alpha:99, nobel:12},
-  {name:"Croatie",      iso:"HR", pop:3900000,     pib:81,    fifa:10,  alt:1831,  cote:5835,  unesco:10, surf:56594,    vie:78.5, dens:69,   front:4, pib_hab:29368, jo:48, co2:3.5, urbain:58, age_med:44, tourisme:20.0, ido:50, rail:2617, alpha:99, nobel:2},
-  {name:"Autriche",     iso:"AT", pop:9100000,     pib:515,   fifa:27,  alt:3798,  cote:0,     unesco:12, surf:83879,    vie:82,   dens:108,  front:8, pib_hab:65640, jo:101, co2:6.9, urbain:59, age_med:44, tourisme:32.0, ido:71, rail:5554, alpha:99, nobel:22},
-  {name:"Danemark",     iso:"DK", pop:5900000,     pib:405,   fifa:21,  alt:171,   cote:7314,  unesco:11, surf:43094,    vie:81.5, dens:137,  front:1, pib_hab:82706, jo:214, co2:6.0, urbain:88, age_med:42, tourisme:12.0, ido:90, rail:2633, alpha:99, nobel:14},
-  {name:"Madagascar",   iso:"MG", pop:30300000,    pib:16,    fifa:108, alt:2876,  cote:4828,  unesco:3,  surf:587041,   vie:67,   dens:52,   front:0, pib_hab:653, jo:0, co2:0.2, urbain:40, age_med:18, tourisme:0.3, ido:25, rail:854, alpha:76, nobel:0},
-  {name:"Roumanie",          iso:"RO", pop:19000000,   pib:350,  fifa:46,  alt:2544,  cote:225,   unesco:9,  surf:238397,   vie:76,   dens:80,   front:5, pib_hab:23768, jo:317, co2:4.2, urbain:56, age_med:43, tourisme:4.0, ido:46, rail:10777, alpha:98, nobel:2},
-  {name:"Hongrie",           iso:"HU", pop:9700000,    pib:200,  fifa:29,  alt:1014,  cote:0,     unesco:8,  surf:93028,    vie:76.5, dens:104,  front:7, pib_hab:28304, jo:530, co2:4.6, urbain:72, age_med:44, tourisme:14.0, ido:42, rail:7685, alpha:99, nobel:15},
-  {name:"République tchèque",iso:"CZ", pop:10900000,   pib:330,  fifa:38,  alt:1602,  cote:0,     unesco:17, surf:78867,    vie:79,   dens:138,  front:4, pib_hab:38373, jo:72, co2:9.2, urbain:74, age_med:43, tourisme:14.0, ido:57, rail:9403, alpha:99, nobel:2},
-  {name:"Serbie",            iso:"RS", pop:6800000,    pib:80,   fifa:30,  alt:2656,  cote:0,     unesco:5,  surf:77474,    vie:76,   dens:88,   front:8, pib_hab:17292, jo:29, co2:5.5, urbain:57, age_med:43, tourisme:3.0, ido:36, rail:3809, alpha:98, nobel:2},
-  {name:"Bulgarie",          iso:"BG", pop:6500000,    pib:103,  fifa:75,  alt:2925,  cote:354,   unesco:10, surf:110879,   vie:75,   dens:59,   front:5, pib_hab:22896, jo:231, co2:7.5, urbain:74, age_med:44, tourisme:12.0, ido:45, rail:4030, alpha:98, nobel:1},
-  {name:"Lituanie",          iso:"LT", pop:2800000,    pib:79,   fifa:130, alt:294,   cote:90,    unesco:4,  surf:65300,    vie:76,   dens:43,   front:4, pib_hab:36225, jo:30, co2:4.8, urbain:68, age_med:44, tourisme:2.0, ido:59, rail:1768, alpha:99, nobel:0},
-  {name:"Biélorussie",       iso:"BY", pop:9400000,    pib:73,   fifa:88,  alt:346,   cote:0,     unesco:4,  surf:207600,   vie:74,   dens:45,   front:5, pib_hab:10016, jo:85, co2:6.8, urbain:80, age_med:41, tourisme:0.4, ido:21, rail:5491, alpha:99, nobel:1},
-  {name:"Moldova",           iso:"MD", pop:2600000,    pib:16,   fifa:172, alt:429,   cote:0,     unesco:1,  surf:33846,    vie:72,   dens:77,   front:2, pib_hab:8984, jo:10, co2:2.4, urbain:43, age_med:38, tourisme:0.2, ido:42, rail:1157, alpha:99, nobel:0},
-  {name:"Luxembourg",        iso:"LU", pop:660000,     pib:87,   fifa:96,  alt:560,   cote:0,     unesco:1,  surf:2586,     vie:83,   dens:255,  front:3, pib_hab:154115, jo:3, co2:13.8, urbain:91, age_med:39, tourisme:1.0, ido:78, rail:275, alpha:99, nobel:0},
-  {name:"Malte",             iso:"MT", pop:530000,     pib:20,   fifa:163, alt:253,   cote:197,   unesco:3,  surf:316,      vie:83,   dens:1676, front:0, pib_hab:53082, jo:0, co2:3.7, urbain:95, age_med:42, tourisme:2.3, ido:51, rail:0, alpha:94, nobel:0},
-  {name:"Chypre",            iso:"CY", pop:1200000,    pib:32,   fifa:104, alt:1952,  cote:782,   unesco:3,  surf:9251,     vie:83,   dens:130,  front:1, pib_hab:45601, jo:2, co2:6.3, urbain:67, age_med:39, tourisme:3.5, ido:53, rail:0, alpha:98, nobel:0},
-  {name:"Bosnie-Herzégovine",iso:"BA", pop:3200000,    pib:26,   fifa:65,  alt:2386,  cote:20,    unesco:2,  surf:51197,    vie:77,   dens:63,   front:3, pib_hab:10546, jo:0, co2:6.1, urbain:50, age_med:43, tourisme:1.0, ido:35, rail:601, alpha:98, nobel:0},
-  {name:"Tanzanie",          iso:"TZ", pop:65000000,   pib:79,   fifa:103, alt:5895,  cote:1424,  unesco:7,  surf:945087,   vie:68,   dens:69,   front:8, pib_hab:1378, jo:2, co2:0.2, urbain:37, age_med:18, tourisme:1.7, ido:35, rail:3890, alpha:78, nobel:0},
-  {name:"Ghana",             iso:"GH", pop:33000000,   pib:76,   fifa:63,  alt:876,   cote:539,   unesco:2,  surf:238533,   vie:64,   dens:138,  front:3, pib_hab:3179, jo:5, co2:0.5, urbain:59, age_med:21, tourisme:1.0, ido:43, rail:947, alpha:83, nobel:0},
-  {name:"Cameroun",          iso:"CM", pop:28000000,   pib:47,   fifa:53,  alt:4070,  cote:402,   unesco:2,  surf:475442,   vie:60,   dens:59,   front:6, pib_hab:2195, jo:6, co2:0.3, urbain:60, age_med:18, tourisme:0.4, ido:25, rail:987, alpha:77, nobel:0},
-  {name:"Côte d'Ivoire",     iso:"CI", pop:27000000,   pib:78,   fifa:57,  alt:1752,  cote:520,   unesco:5,  surf:322463,   vie:59,   dens:84,   front:5, pib_hab:3294, jo:5, co2:0.5, urbain:53, age_med:18, tourisme:0.7, ido:40, rail:660, alpha:69, nobel:0},
-  {name:"Sénégal",           iso:"SN", pop:17000000,   pib:31,   fifa:20,  alt:648,   cote:531,   unesco:7,  surf:196722,   vie:68,   dens:87,   front:5, pib_hab:2030, jo:1, co2:0.6, urbain:49, age_med:19, tourisme:1.5, ido:43, rail:906, alpha:60, nobel:0},
-  {name:"Mozambique",        iso:"MZ", pop:33000000,   pib:20,   fifa:119, alt:2436,  cote:2470,  unesco:1,  surf:801590,   vie:58,   dens:41,   front:6, pib_hab:720, jo:2, co2:0.2, urbain:39, age_med:17, tourisme:0.4, ido:25, rail:3100, alpha:63, nobel:0},
-  {name:"Tunisie",           iso:"TN", pop:12000000,   pib:49,   fifa:31,  alt:1544,  cote:1148,  unesco:9,  surf:163610,   vie:77,   dens:74,   front:2, pib_hab:4826, jo:18, co2:2.9, urbain:71, age_med:32, tourisme:9.5, ido:41, rail:2155, alpha:82, nobel:0},
-  {name:"Angola",            iso:"AO", pop:36000000,   pib:101,  fifa:111, alt:2620,  cote:1600,  unesco:1,  surf:1246700,  vie:62,   dens:29,   front:4, pib_hab:2701, jo:0, co2:0.6, urbain:68, age_med:17, tourisme:0.4, ido:28, rail:2638, alpha:71, nobel:0},
-  {name:"RD Congo",          iso:"CD", pop:100000000,  pib:65,   fifa:72,  alt:5109,  cote:37,    unesco:5,  surf:2344858,  vie:61,   dens:43,   front:9, pib_hab:801, jo:0, co2:0.0, urbain:48, age_med:17, tourisme:0.2, ido:20, rail:4007, alpha:80, nobel:0},
-  {name:"Ouganda",           iso:"UG", pop:47000000,   pib:49,   fifa:97,  alt:5110,  cote:0,     unesco:3,  surf:241550,   vie:64,   dens:195,  front:5, pib_hab:1458, jo:13, co2:0.1, urbain:27, age_med:17, tourisme:1.0, ido:26, rail:250, alpha:77, nobel:0},
-  {name:"Rwanda",            iso:"RW", pop:14000000,   pib:14,   fifa:102, alt:4507,  cote:0,     unesco:2,  surf:26338,    vie:69,   dens:535,  front:4, pib_hab:1069, jo:0, co2:0.1, urbain:18, age_med:20, tourisme:0.3, ido:53, rail:0, alpha:74, nobel:0},
-  {name:"Namibie",           iso:"NA", pop:2600000,    pib:13,   fifa:124, alt:2573,  cote:1572,  unesco:2,  surf:824292,   vie:63,   dens:3.1,  front:4, pib_hab:5182, jo:5, co2:1.4, urbain:54, age_med:23, tourisme:1.0, ido:49, rail:2382, alpha:92, nobel:0},
-  {name:"Venezuela",         iso:"VE", pop:29000000,   pib:95,   fifa:66,  alt:4981,  cote:2800,  unesco:3,  surf:912050,   vie:72,   dens:32,   front:7, pib_hab:2972, jo:19, co2:2.1, urbain:89, age_med:30, tourisme:0.5, ido:13, rail:447, alpha:97, nobel:0},
-  {name:"Équateur",          iso:"EC", pop:18000000,   pib:118,  fifa:44,  alt:6263,  cote:2237,  unesco:5,  surf:283561,   vie:77,   dens:64,   front:2, pib_hab:7384, jo:10, co2:2.5, urbain:65, age_med:29, tourisme:2.0, ido:34, rail:965, alpha:94, nobel:0},
-  {name:"Bolivie",           iso:"BO", pop:12000000,   pib:44,   fifa:85,  alt:6542,  cote:0,     unesco:7,  surf:1098581,  vie:72,   dens:11,   front:5, pib_hab:4585, jo:0, co2:1.9, urbain:71, age_med:25, tourisme:0.8, ido:29, rail:3960, alpha:93, nobel:0},
-  {name:"Paraguay",          iso:"PY", pop:7400000,    pib:43,   fifa:70,  alt:842,   cote:0,     unesco:1,  surf:406752,   vie:74,   dens:18,   front:3, pib_hab:7324, jo:1, co2:1.5, urbain:63, age_med:27, tourisme:1.2, ido:28, rail:30, alpha:95, nobel:0},
-  {name:"Uruguay",           iso:"UY", pop:3400000,    pib:77,   fifa:18,  alt:514,   cote:660,   unesco:3,  surf:176215,   vie:78,   dens:19,   front:2, pib_hab:26041, jo:10, co2:2.3, urbain:96, age_med:36, tourisme:3.5, ido:73, rail:1641, alpha:99, nobel:2},
-  {name:"Cuba",              iso:"CU", pop:11000000,   pib:107,  fifa:178, alt:1974,  cote:3735,  unesco:9,  surf:109884,   vie:78,   dens:100,  front:0, pib_hab:22000, jo:244, co2:2.1, urbain:78, age_med:43, tourisme:3.0, ido:44, rail:8226, alpha:99, nobel:0},
-  {name:"Guatemala",         iso:"GT", pop:17000000,   pib:95,   fifa:91,  alt:4220,  cote:400,   unesco:3,  surf:108889,   vie:74,   dens:156,  front:4, pib_hab:6851, jo:3, co2:1.0, urbain:53, age_med:23, tourisme:2.0, ido:23, rail:800, alpha:84, nobel:1},
-  {name:"Honduras",          iso:"HN", pop:10000000,   pib:32,   fifa:76,  alt:2870,  cote:820,   unesco:1,  surf:112492,   vie:73,   dens:89,   front:4, pib_hab:3699, jo:0, co2:1.0, urbain:60, age_med:24, tourisme:0.8, ido:23, rail:700, alpha:88, nobel:0},
-  {name:"Costa Rica",        iso:"CR", pop:5200000,    pib:70,   fifa:54,  alt:3821,  cote:1290,  unesco:4,  surf:51100,    vie:80,   dens:102,  front:2, pib_hab:20134, jo:4, co2:1.7, urbain:84, age_med:35, tourisme:3.1, ido:54, rail:278, alpha:98, nobel:0},
-  {name:"Panama",            iso:"PA", pop:4400000,    pib:77,   fifa:82,  alt:3475,  cote:2490,  unesco:5,  surf:75417,    vie:78,   dens:58,   front:2, pib_hab:20754, jo:4, co2:2.3, urbain:70, age_med:30, tourisme:2.1, ido:35, rail:76, alpha:96, nobel:0},
-  {name:"Pakistan",          iso:"PK", pop:230000000,  pib:375,  fifa:133, alt:8611,  cote:1046,  unesco:6,  surf:881913,   vie:67,   dens:261,  front:6, pib_hab:1707, jo:11, co2:0.9, urbain:38, age_med:21, tourisme:0.5, ido:28, rail:11881, alpha:58, nobel:2},
-  {name:"Bangladesh",        iso:"BD", pop:170000000,  pib:460,  fifa:188, alt:1064,  cote:580,   unesco:3,  surf:147570,   vie:73,   dens:1153, front:2, pib_hab:2960, jo:0, co2:0.6, urbain:40, age_med:29, tourisme:0.8, ido:24, rail:2877, alpha:76, nobel:1},
-  {name:"Philippines",       iso:"PH", pop:115000000,  pib:440,  fifa:136, alt:2954,  cote:36289, unesco:6,  surf:300000,   vie:71,   dens:383,  front:0, pib_hab:4619, jo:18, co2:1.2, urbain:48, age_med:25, tourisme:5.5, ido:34, rail:77, alpha:97, nobel:0},
-  {name:"Malaisie",          iso:"MY", pop:33000000,   pib:430,  fifa:130, alt:4095,  cote:4675,  unesco:4,  surf:329847,   vie:76,   dens:100,  front:11, pib_hab:14762, jo:15, co2:8.1, urbain:78, age_med:30, tourisme:26.0, ido:50, rail:1666, alpha:95, nobel:0},
-  {name:"Sri Lanka",         iso:"LK", pop:22000000,   pib:84,   fifa:206, alt:2524,  cote:1340,  unesco:8,  surf:65610,    vie:77,   dens:335,  front:0, pib_hab:4325, jo:2, co2:0.9, urbain:19, age_med:33, tourisme:1.5, ido:34, rail:1447, alpha:93, nobel:0},
-  {name:"Népal",             iso:"NP", pop:30000000,   pib:40,   fifa:172, alt:8849,  cote:0,     unesco:4,  surf:147181,   vie:71,   dens:204,  front:2, pib_hab:1658, jo:0, co2:0.5, urbain:22, age_med:26, tourisme:1.0, ido:35, rail:59, alpha:67, nobel:0},
-  {name:"Kazakhstan",        iso:"KZ", pop:19000000,   pib:260,  fifa:109, alt:7010,  cote:0,     unesco:6,  surf:2724900,  vie:73,   dens:7,    front:5, pib_hab:15527, jo:78, co2:15.0, urbain:59, age_med:32, tourisme:7.0, ido:39, rail:16900, alpha:99, nobel:0},
-  {name:"Iran",              iso:"IR", pop:87000000,   pib:367,  fifa:21,  alt:5671,  cote:2440,  unesco:27, surf:1648195,  vie:77,   dens:53,   front:7, pib_hab:4250, jo:88, co2:8.4, urbain:77, age_med:33, tourisme:4.0, ido:24, rail:12200, alpha:88, nobel:2},
-  {name:"Irak",              iso:"IQ", pop:42000000,   pib:268,  fifa:64,  alt:3607,  cote:58,    unesco:6,  surf:438317,   vie:71,   dens:96,   front:6, pib_hab:5873, jo:1, co2:4.6, urbain:72, age_med:21, tourisme:1.5, ido:23, rail:3000, alpha:85, nobel:0},
-  {name:"Jordanie",          iso:"JO", pop:10000000,   pib:50,   fifa:87,  alt:1854,  cote:26,    unesco:6,  surf:89342,    vie:75,   dens:112,  front:5, pib_hab:5149, jo:4, co2:2.5, urbain:92, age_med:24, tourisme:3.7, ido:49, rail:507, alpha:98, nobel:0},
-  {name:"Qatar",             iso:"QA", pop:2900000,    pib:237,  fifa:37,  alt:103,   cote:563,   unesco:1,  surf:11586,    vie:80,   dens:250,  front:1, pib_hab:76534, jo:9, co2:35.6, urbain:99, age_med:33, tourisme:4.1, ido:58, rail:76, alpha:93, nobel:0},
-  {name:"Mongolie",          iso:"MN", pop:3400000,    pib:20,   fifa:183, alt:4374,  cote:0,     unesco:4,  surf:1564116,  vie:71,   dens:2.2,  front:2, pib_hab:7320, jo:31, co2:9.7, urbain:70, age_med:29, tourisme:0.5, ido:38, rail:1810, alpha:99, nobel:0},
-  {name:"Myanmar",           iso:"MM", pop:54000000,   pib:65,   fifa:158, alt:5881,  cote:1930,  unesco:2,  surf:676578,   vie:65,   dens:80,   front:5, pib_hab:1176, jo:0, co2:0.5, urbain:32, age_med:29, tourisme:0.5, ido:20, rail:3955, alpha:90, nobel:0},
-  {name:"Singapour",         iso:"SG", pop:5900000,    pib:501,  fifa:161, alt:163,   cote:193,   unesco:1,  surf:728,      vie:84,   dens:8100, front:0, pib_hab:99042, jo:6, co2:8.2, urbain:100, age_med:43, tourisme:13.6, ido:83, rail:164, alpha:97, nobel:0},
-  {name:"Papouasie-Nouvelle-Guinée",iso:"PG",pop:10000000,pib:30,fifa:155,alt:4509, cote:5152,  unesco:1,  surf:462840,   vie:65,   dens:22,   front:1, pib_hab:2560, jo:0, co2:0.6, urbain:14, age_med:23, tourisme:0.2, ido:30, rail:0, alpha:64, nobel:0},
-  {name:"Fidji",             iso:"FJ", pop:930000,     pib:5,    fifa:165, alt:1324,  cote:1129,  unesco:1,  surf:18274,    vie:67,   dens:51,   front:0, pib_hab:7170, jo:4, co2:1.7, urbain:59, age_med:28, tourisme:0.9, ido:54, rail:595, alpha:99, nobel:0}
+  {name:"France",       iso:"FR", pop:68720337,    pib:3366,  fifa:3,   alt:4810,  cote:4853,  unesco:56, surf:643801,   vie:82.8, dens:107,  front:11, pib_hab:48986, jo:824, co2:4.2, urbain:79, age_med:42.7, tourisme:102, ido:66, rail:27860, alpha:99, nobel:79, dist:0, alcool:11.9, tmax:46.0, armee:64675, rugby:4, cdm:17, prison:115, viande:83.0},
+  {name:"Allemagne",    iso:"DE", pop:83491249,    pib:5051,  fifa:12,  alt:2963,  cote:2389,  unesco:55, surf:357581,   vie:81,   dens:233,  front:9, pib_hab:60496, jo:687, co2:7.1, urbain:82, age_med:46.9, tourisme:37.5, ido:77, rail:39379, alpha:99, nobel:116, dist:878, alcool:11.5, tmax:41.7, armee:88458, rugby:35, cdm:21, prison:68, viande:87.8},
+  {name:"Espagne",      iso:"ES", pop:49355143,    pib:1906,  fifa:1,   alt:3718,  cote:4964,  unesco:50, surf:505370,   vie:83.9, dens:98,   front:5, pib_hab:38627, jo:187, co2:4.6, urbain:81, age_med:47.2, tourisme:93.8, ido:55, rail:15489, alpha:100, nobel:8, dist:1052, alcool:11.2, tmax:47.6, armee:24615, rugby:17, cdm:17, prison:117, viande:100.3},
+  {name:"Italie",       iso:"IT", pop:58915656,    pib:2552,  fifa:15,   alt:4748,  cote:7600,  unesco:62, surf:302068,   vie:83.4,   dens:195,  front:6, pib_hab:43309, jo:658, co2:5.2, urbain:70, age_med:48.8, tourisme:57.7, ido:53, rail:18475, alpha:99, nobel:21, dist:1107, alcool:8.1, tmax:48.8, armee:37965, rugby:12, cdm:18, prison:105, viande:81.0},
+  {name:"Royaume-Uni",  iso:"GB", pop:69487000,    pib:4003,  fifa:4,   alt:1345,  cote:12429, unesco:35, surf:244376,   vie:81.2,   dens:284,  front:3, pib_hab:57602, jo:986, co2:4.4, urbain:83, age_med:40.9, tourisme:41.8, ido:70, rail:16390, alpha:99, nobel:144, dist:344, alcool:10.3, tmax:40.3, armee:81763, rugby:5, cdm:17, prison:140, viande:79.9},
+  {name:"Portugal",     iso:"PT", pop:10804871,    pib:347,   fifa:7,   alt:2351,  cote:1793,  unesco:17, surf:92090,    vie:82.3, dens:117,  front:1, pib_hab:32082, jo:32, co2:3.5, urbain:61, age_med:46.8, tourisme:29, ido:56, rail:2526, alpha:94, nobel:2, dist:1453, alcool:10.8, tmax:47.4, armee:4642, rugby:14, cdm:9, prison:115, viande:94.1},
+  {name:"Belgique",     iso:"BE", pop:11941781,    pib:725,   fifa:8,   alt:694,   cote:66,    unesco:16, surf:30528,    vie:82.4,   dens:391,  front:4, pib_hab:60750, jo:168, co2:7.3, urbain:88, age_med:42.4, tourisme:9, ido:69, rail:3602, alpha:99, nobel:12, dist:264, alcool:9.6, tmax:41.8, armee:8562, rugby:23, cdm:15, prison:104, viande:65.8},
+  {name:"Pays-Bas",     iso:"NL", pop:18087633,    pib:1333,  fifa:9,   alt:862,   cote:451,   unesco:13, surf:41865,    vie:81.9,   dens:432,  front:2, pib_hab:73684, jo:357, co2:6.9, urbain:96, age_med:42.2, tourisme:21.2, ido:78, rail:3055, alpha:99, nobel:22, dist:431, alcool:8.8, tmax:40.7, armee:23179, rugby:27, cdm:12, prison:64, viande:75.8},
+  {name:"Suisse",       iso:"CH", pop:9092436,     pib:1044,   fifa:14,  alt:4634,  cote:0,     unesco:13, surf:41291,    vie:84.2,   dens:220,  front:5, pib_hab:114769, jo:212, co2:3.8, urbain:86, age_med:44.4, tourisme:12, ido:80, rail:5296, alpha:99, nobel:27, dist:435, alcool:9.6, tmax:41.5, armee:6722, rugby:28, cdm:13, prison:77, viande:67.5},
+  {name:"Suède",        iso:"SE", pop:10596620,    pib:669,   fifa:37,  alt:2100,  cote:3218,  unesco:15, surf:450295,   vie:83.3,   dens:24,   front:2, pib_hab:63133, jo:514, co2:3.5, urbain:89, age_med:41.2, tourisme:7, ido:80, rail:10910, alpha:99, nobel:34, dist:1544, alcool:9.3, tmax:38.0, armee:12040, rugby:34, cdm:13, prison:96, viande:77.1},
+  {name:"Norvège",      iso:"NO", pop:5610870,     pib:531,   fifa:19,  alt:2469,  cote:25148, unesco:8,  surf:386224,   vie:83,   dens:15,   front:3, pib_hab:94594, jo:169, co2:7.5, urbain:84, age_med:41, tourisme:5, ido:81, rail:3848, alpha:99, nobel:14, dist:1342, alcool:6.5, tmax:35.6, armee:10435, rugby:101, cdm:4, prison:55, viande:67.5},
+  {name:"Finlande",     iso:"FI", pop:5646436,     pib:317,   fifa:75,  alt:1328,  cote:1250,  unesco:8,  surf:338145,   vie:81.6,   dens:17,   front:3, pib_hab:56149, jo:305, co2:5.9, urbain:75, age_med:44, tourisme:3, ido:88, rail:5918, alpha:99, nobel:5, dist:1909, alcool:8.8, tmax:37.2, armee:6988, rugby:77, cdm:0, prison:52, viande:76.7},
+  {name:"Pologne",      iso:"PL", pop:36435861,    pib:1035,   fifa:36,  alt:2499,  cote:440,   unesco:18, surf:312685,   vie:78.3,   dens:117,  front:7, pib_hab:28420, jo:308, co2:7.6, urbain:60, age_med:43.4, tourisme:20, ido:52, rail:19461, alpha:99, nobel:19, dist:1367, alcool:12.1, tmax:40.5, armee:38001, rugby:30, cdm:9, prison:194, viande:88.7},
+  {name:"Grèce",        iso:"GR", pop:10413962,    pib:281,   fifa:46,  alt:2917,  cote:13676, unesco:21, surf:131957,   vie:81.7, dens:79,   front:4, pib_hab:26948, jo:129, co2:4.9, urbain:79, age_med:46.8, tourisme:36, ido:50, rail:2345, alpha:94, nobel:2, dist:2096, alcool:7.3, tmax:48.0, armee:8022, rugby:112, cdm:3, prison:98, viande:71.7},
+  {name:"Russie",       iso:"RU", pop:143513328,   pib:2561,  fifa:35,  alt:5642,  cote:37653, unesco:33, surf:17098246, vie:73.3,   dens:8.4,    front:14, pib_hab:17547, jo:421, co2:13.5, urbain:75, age_med:42.3, tourisme:15, ido:22, rail:85494, alpha:100, nobel:30, dist:2487, alcool:10.4, tmax:45.4, armee:148967, rugby:32, cdm:11, prison:197, viande:87.8},
+  {name:"Turquie",      iso:"TR", pop:85878556,    pib:1597,  fifa:27,  alt:5137,  cote:7200,  unesco:22, surf:783562,   vie:77.2,   dens:110,  front:8, pib_hab:18599, jo:111, co2:5.2, urbain:89, age_med:34.4, tourisme:60.6, ido:31, rail:11497, alpha:97, nobel:3, dist:2598, alcool:1.9, tmax:50.5, armee:24979, rugby:84, cdm:3, prison:424, viande:38.9},
+  {name:"Ukraine",      iso:"UA", pop:38980376,    pib:214,   fifa:33,  alt:2061,  cote:2782,  unesco:8,  surf:603550,   vie:73.4,   dens:65,   front:7, pib_hab:5866, jo:151, co2:3.2, urbain:70, age_med:44.6, tourisme:1, ido:36, rail:21733, alpha:99, nobel:7, dist:2024, alcool:8.7, tmax:42.0, armee:64705, rugby:51, cdm:1, prison:130, viande:46.9},
+  {name:"États-Unis",   iso:"US", pop:341784857,   pib:30770, fifa:16,  alt:6190,  cote:19924, unesco:27, surf:9525067,  vie:78.4,   dens:36,   front:2, pib_hab:90027, jo:2774, co2:13.7, urbain:80, age_med:39.5, tourisme:72.4, ido:64, rail:293564, alpha:99, nobel:427, dist:6166, alcool:9.3, tmax:56.7, armee:997309, rugby:15, cdm:12, prison:541, viande:124.1},
+  {name:"Canada",       iso:"CA", pop:41651653,    pib:2320,  fifa:30,  alt:5959,  cote:202080,unesco:22, surf:9984670,  vie:81.6, dens:4.2,    front:2, pib_hab:55698, jo:351, co2:14.2, urbain:83, age_med:42.8, tourisme:20, ido:75, rail:49422, alpha:99, nobel:30, dist:5649, alcool:10.0, tmax:49.6, armee:29347, rugby:22, cdm:3, prison:90, viande:82.6},
+  {name:"Mexique",      iso:"MX", pop:131946900,   pib:1833,  fifa:10,  alt:5636,  cote:9330,  unesco:36, surf:1964375,  vie:75.1,   dens:67,   front:3, pib_hab:13889, jo:77, co2:3.7, urbain:80, age_med:31, tourisme:45, ido:27, rail:23389, alpha:96, nobel:3, dist:9196, alcool:6.0, tmax:52.0, armee:16726, rugby:37, cdm:18, prison:174, viande:64.9},
+  {name:"Brésil",       iso:"BR", pop:212812405,   pib:2280,  fifa:5,   alt:2994,  cote:7491,  unesco:26, surf:8510346,  vie:75.8,   dens:25,   front:10, pib_hab:10713, jo:170, co2:2.3, urbain:88, age_med:35.4, tourisme:6.7, ido:35, rail:29850, alpha:95, nobel:1, dist:8726, alcool:7.7, tmax:44.8, armee:20948, rugby:33, cdm:23, prison:392, viande:77.3},
+  {name:"Argentine",    iso:"AR", pop:45851378,    pib:683,   fifa:2,   alt:6962,  cote:4989,  unesco:12, surf:2780400,  vie:77.4,   dens:16,   front:5, pib_hab:14898, jo:80, co2:4.2, urbain:92, age_med:34.6, tourisme:6.6, ido:36, rail:17866, alpha:99, nobel:5, dist:11050, alcool:8.0, tmax:48.9, armee:4178, rugby:8, cdm:19, prison:254, viande:109.4},
+  {name:"Chili",        iso:"CL", pop:19859921,    pib:357,   fifa:49,  alt:6893,  cote:6435,  unesco:7,  surf:756102,   vie:81.2,   dens:26,   front:3, pib_hab:17995, jo:15, co2:3.9, urbain:89, age_med:38.9, tourisme:5.2, ido:63, rail:7282, alpha:96, nobel:2, dist:11648, alcool:6.8, tmax:44.9, armee:5105, rugby:16, cdm:9, prison:306, viande:83.2},
+  {name:"Colombie",     iso:"CO", pop:53425635,    pib:457,   fifa:11,  alt:5730,  cote:3208,  unesco:9,  surf:1138910,  vie:77.7,   dens:47,   front:5, pib_hab:8562, jo:38, co2:1.8, urbain:79, age_med:33.1, tourisme:6.5, ido:37, rail:2141, alpha:95, nobel:2, dist:8631, alcool:4.9, tmax:45.0, armee:15096, rugby:41, cdm:7, prison:200, viande:55.9},
+  {name:"Pérou",        iso:"PE", pop:34576665,    pib:335,   fifa:50,  alt:6746,  cote:2414,  unesco:13, surf:1285216,  vie:77.7,   dens:27,   front:5, pib_hab:9684, jo:5, co2:1.9, urbain:86, age_med:30.4, tourisme:3.2, ido:30, rail:1854, alpha:94, nobel:1, dist:10253, alcool:7.5, tmax:41.6, armee:2565, rugby:80, cdm:5, prison:285, viande:24.4},
+  {name:"Chine",        iso:"CN", pop:1406585000,  pib:19498, fifa:91,  alt:8849,  cote:14500, unesco:61, surf:9596960,  vie:78, dens:147,  front:14, pib_hab:13862, jo:727, co2:9.2, urbain:66, age_med:40.8, tourisme:64.9, ido:43, rail:150000, alpha:97, nobel:3, dist:8217, alcool:5.7, tmax:52.2, armee:313658, rugby:92, cdm:1, prison:119, viande:60.6},
+  {name:"Japon",        iso:"JP", pop:123366734,   pib:4435,  fifa:17,  alt:3776,  cote:29751, unesco:27, surf:377915,   vie:84, dens:326,  front:0, pib_hab:35951, jo:542, co2:8.1, urbain:92, age_med:50.2, tourisme:36.9, ido:71, rail:27311, alpha:99, nobel:34, dist:9713, alcool:6.6, tmax:41.8, armee:55274, rugby:9, cdm:8, prison:33, viande:49.3},
+  {name:"Corée du Sud", iso:"KR", pop:51684564,    pib:1872,  fifa:32,  alt:1950,  cote:2413,  unesco:17, surf:100432,   vie:83.4, dens:515,  front:1, pib_hab:36227, jo:320, co2:11.4, urbain:81, age_med:47, tourisme:16.4, ido:63, rail:3979, alpha:98, nobel:3, dist:8966, alcool:8.2, tmax:41.0, armee:47571, rugby:38, cdm:12, prison:103, viande:70.7},
+  {name:"Inde",         iso:"IN", pop:1463865525,  pib:3956,  fifa:138, alt:8586,  cote:7000,  unesco:45, surf:3287263,  vie:72,   dens:445,  front:7, pib_hab:2702, jo:41, co2:2.1, urbain:36, age_med:30.1, tourisme:9, ido:39, rail:65554, alpha:78, nobel:12, dist:6586, alcool:4.9, tmax:51.0, armee:86126, rugby:85, cdm:0, prison:41, viande:6.1},
+  {name:"Indonésie",    iso:"ID", pop:285721236,   pib:1446,  fifa:118, alt:4884,  cote:54716, unesco:10, surf:1904569,  vie:71.1,   dens:150,  front:3, pib_hab:5060, jo:40, co2:2.7, urbain:59, age_med:31.8, tourisme:12, ido:34, rail:8159, alpha:96, nobel:0, dist:11586, alcool:0.05, tmax:40.6, armee:11043, rugby:110, cdm:1, prison:96, viande:11.7},
+  {name:"Thaïlande",    iso:"TH", pop:71619863,    pib:577,   fifa:94, alt:2565,  cote:3219,  unesco:9,  surf:513120,   vie:76.4,   dens:140,  front:4, pib_hab:8057, jo:41, co2:3.8, urbain:63, age_med:41.9, tourisme:35.5, ido:33, rail:4127, alpha:91, nobel:0, dist:9444, alcool:7.9, tmax:45.4, armee:5522, rugby:71, cdm:0, prison:391, viande:27.4},
+  {name:"Vietnam",      iso:"VN", pop:101598527,    pib:515,   fifa:99, alt:3144,  cote:3444,  unesco:9,  surf:331340,   vie:74.6, dens:307,  front:3, pib_hab:5066, jo:5, co2:3.9, urbain:39, age_med:33.5, tourisme:17.5, ido:41, rail:2600, alpha:96, nobel:1, dist:9197, alcool:9.3, tmax:44.2, armee:null, rugby:null, cdm:0, prison:135, viande:63.3},
+  {name:"Arabie Saoudite",iso:"SA",pop:36973555,   pib:1277,  fifa:58,  alt:3000,  cote:2640,  unesco:8,  surf:2149690,  vie:78.7,   dens:17,   front:8, pib_hab:34537, jo:4, co2:18.9, urbain:85, age_med:32.8, tourisme:29.7, ido:57, rail:5410, alpha:98, nobel:1, dist:4682, alcool:0.05, tmax:52.0, armee:80331, rugby:null, cdm:7, prison:207, viande:54.1},
+  {name:"Émirats arabes unis",iso:"AE",pop:11513149,pib:552,   fifa:68,  alt:1905,  cote:1318,  unesco:3,  surf:83600,    vie:82.9,   dens:138,  front:2, pib_hab:47973, jo:2, co2:18.4, urbain:86, age_med:35.8, tourisme:18.7, ido:69, rail:900, alpha:99, nobel:0, dist:5243, alcool:2.5, tmax:52.1, armee:null, rugby:40, cdm:1, prison:104, viande:62.0},
+  {name:"Israël",       iso:"IL", pop:10122800,     pib:611,   fifa:76,  alt:1204,  cote:273,   unesco:9,  surf:21937,    vie:83.2,   dens:461,  front:5, pib_hab:60337, jo:20, co2:6.1, urbain:92, age_med:30.2, tourisme:4, ido:62, rail:1497, alpha:99, nobel:14, dist:3332, alcool:3.0, tmax:54.0, armee:46505, rugby:64, cdm:1, prison:217, viande:97.0},
+  {name:"Égypte",       iso:"EG", pop:118365995,   pib:365,   fifa:24,  alt:2629,  cote:2450,  unesco:7,  surf:1001450,  vie:71.6,   dens:118,  front:4, pib_hab:3086, jo:41, co2:2.4, urbain:43, age_med:24.6, tourisme:15.8, ido:30, rail:5085, alpha:79, nobel:6, dist:3209, alcool:0.1, tmax:51.1, armee:2396, rugby:null, cdm:4, prison:116, viande:26.3},
+  {name:"Maroc",        iso:"MA", pop:38430770,    pib:182,   fifa:6,  alt:4165,  cote:1835,  unesco:9,  surf:446550,   vie:75.3,   dens:86,   front:3, pib_hab:4672, jo:26, co2:1.9, urbain:63, age_med:30.9, tourisme:17.4, ido:39, rail:2067, alpha:64, nobel:1, dist:1816, alcool:0.5, tmax:50.4, armee:5518, rugby:39, cdm:7, prison:267, viande:35.1},
+  {name:"Algérie",      iso:"DZ", pop:47435312,    pib:287,   fifa:29,  alt:2908,  cote:998,   unesco:7,  surf:2381741,  vie:76.3,   dens:20,   front:7, pib_hab:6051, jo:20, co2:4.1, urbain:76, age_med:29.3, tourisme:3.5, ido:34, rail:4020, alpha:75, nobel:2, dist:1349, alcool:0.6, tmax:51.3, armee:21811, rugby:45, cdm:5, prison:217, viande:18.1},
+  {name:"Nigeria",      iso:"NG", pop:237527782,   pib:291,   fifa:26,  alt:2419,  cote:853,   unesco:2,  surf:923768,   vie:54.5,   dens:257,  front:4, pib_hab:1224, jo:27, co2:0.6, urbain:64, age_med:19.4, tourisme:2, ido:26, rail:3798, alpha:70, nobel:1, dist:4451, alcool:4.2, tmax:46.4, armee:1133, rugby:74, cdm:6, prison:37, viande:7.2},
+  {name:"Afrique du Sud",iso:"ZA",pop:64747319,    pib:427,   fifa:54,  alt:3450,  cote:2798,  unesco:12, surf:1219090,  vie:66.1,   dens:53,   front:6, pib_hab:6598, jo:95, co2:6.8, urbain:64, age_med:30.7, tourisme:8.9, ido:41, rail:30400, alpha:91, nobel:12, dist:8684, alcool:8.8, tmax:50.0, armee:2836, rugby:1, cdm:4, prison:258, viande:60.0},
+  {name:"Kenya",        iso:"KE", pop:57532493,    pib:136,   fifa:109,  alt:5199,  cote:536,   unesco:8,  surf:580367,   vie:63.6,   dens:99,   front:5, pib_hab:2363, jo:124, co2:0.4, urbain:32, age_med:21.5, tourisme:2, ido:30, rail:3819, alpha:82, nobel:1, dist:6483, alcool:2.9, tmax:42.7, armee:1231, rugby:36, cdm:0, prison:103, viande:15.9},
+  {name:"Éthiopie",     iso:"ET", pop:135472051,   pib:126,   fifa:143, alt:4550,  cote:0,     unesco:12,  surf:1104300,  vie:67.3,   dens:123,  front:6, pib_hab:933, jo:62, co2:0.1, urbain:24, age_med:20.6, tourisme:1, ido:38, rail:659, alpha:60, nobel:1, dist:5573, alcool:3.3, tmax:48.9, armee:922, rugby:null, cdm:0, prison:99, viande:5.4},
+  {name:"Australie",    iso:"AU", pop:27614411,    pib:1799,  fifa:28,  alt:2228,  cote:25760, unesco:21, surf:7741220,  vie:83.1, dens:3.6,  front:0, pib_hab:65130, jo:594, co2:14.2, urbain:88, age_med:38.5, tourisme:9, ido:76, rail:32606, alpha:99, nobel:15, dist:16920, alcool:9.9, tmax:50.7, armee:33820, rugby:6, cdm:7, prison:157, viande:121.6},
+  {name:"Nouvelle-Zélande",iso:"NZ",pop:5324700,   pib:264,   fifa:86,  alt:3724,  cote:15134, unesco:3,  surf:268838,   vie:81.8, dens:20,   front:0, pib_hab:49591, jo:157, co2:6.1, urbain:84, age_med:38.1, tourisme:4, ido:81, rail:4128, alpha:99, nobel:3, dist:18986, alcool:9.6, tmax:42.4, armee:2999, rugby:2, cdm:3, prison:181, viande:100.9},
+  {name:"Islande",      iso:"IS", pop:392404,      pib:38.6,    fifa:74,  alt:2110,  cote:4970,  unesco:3,  surf:103000,   vie:82.5,   dens:3.8,  front:0, pib_hab:98323, jo:4, co2:8.3, urbain:94, age_med:38.2, tourisme:2.1, ido:77, rail:0, alpha:99, nobel:3, dist:2231, alcool:8.2, tmax:30.5, armee:0, rugby:null, cdm:1, prison:35, viande:91.0},
+  {name:"Irlande",      iso:"IE", pop:5484367,     pib:722,   fifa:55,  alt:1041,  cote:1448,  unesco:2,  surf:70273,    vie:82.8, dens:78,   front:1, pib_hab:131592, jo:42, co2:6.2, urbain:65, age_med:40.5, tourisme:10, ido:76, rail:1688, alpha:99, nobel:11, dist:779, alcool:11.4, tmax:33.3, armee:1331, rugby:3, cdm:3, prison:91, viande:76.8},
+  {name:"Croatie",      iso:"HR", pop:3876200,     pib:105,    fifa:13,  alt:1831,  cote:5835,  unesco:10, surf:56594,    vie:78.5, dens:68,   front:5, pib_hab:27104, jo:49, co2:4.8, urbain:58, age_med:44.9, tourisme:20, ido:47, rail:2617, alpha:98, nobel:0, dist:1079, alcool:10.8, tmax:42.8, armee:1629, rugby:56, cdm:7, prison:115, viande:75.3},
+  {name:"Autriche",     iso:"AT", pop:9208163,     pib:579,   fifa:23,  alt:3798,  cote:0,     unesco:12, surf:83878,    vie:81.8,   dens:110,  front:8, pib_hab:62930, jo:98, co2:6.4, urbain:70, age_med:44.5, tourisme:31.9, ido:69, rail:6123, alpha:99, nobel:25, dist:1034, alcool:12.1, tmax:40.5, armee:5259, rugby:61, cdm:8, prison:101, viande:87.2},
+  {name:"Danemark",     iso:"DK", pop:6009169,     pib:463,   fifa:21,  alt:171,   cote:7314,  unesco:13, surf:42947,    vie:81.8, dens:140,  front:1, pib_hab:76970, jo:214, co2:4.4, urbain:89, age_med:42.2, tourisme:12, ido:89, rail:2682, alpha:99, nobel:14, dist:1027, alcool:9.6, tmax:37.0, armee:9959, rugby:58, cdm:6, prison:69, viande:70.8},
+  {name:"Madagascar",   iso:"MG", pop:32740678,    pib:19.6,    fifa:104, alt:2876,  cote:4828,  unesco:3,  surf:587041,   vie:63.6,   dens:56,   front:0, pib_hab:599, jo:0, co2:0.1, urbain:33, age_med:20.5, tourisme:0.3, ido:25, rail:836, alpha:75, nobel:0, dist:8760, alcool:1.0, tmax:43.6, armee:122, rugby:46, cdm:0, prison:101, viande:12.3},
+  {name:"Roumanie",          iso:"RO", pop:19020271,   pib:429,  fifa:52,  alt:2544,  cote:225,   unesco:11,  surf:238398,   vie:76.4,   dens:80,   front:5, pib_hab:22538, jo:317, co2:3.7, urbain:52, age_med:45.8, tourisme:4, ido:45, rail:10628, alpha:99, nobel:4, dist:1871, alcool:16.9, tmax:44.5, armee:8716, rugby:21, cdm:7, prison:126, viande:63.9},
+  {name:"Hongrie",           iso:"HU", pop:9514251,    pib:246,  fifa:39,  alt:1014,  cote:0,     unesco:8,  surf:93025,    vie:76.6, dens:102,  front:7, pib_hab:25907, jo:530, co2:4.5, urbain:71, age_med:45.1, tourisme:14, ido:40, rail:7687, alpha:99, nobel:16, dist:1244, alcool:11.6, tmax:41.9, armee:4735, rugby:86, cdm:9, prison:192, viande:79.7},
+  {name:"République tchèque",iso:"CZ", pop:10886878,   pib:391,  fifa:48,  alt:1602,  cote:0,     unesco:17, surf:78871,    vie:79.8,   dens:138,  front:4, pib_hab:35917, jo:72, co2:7.9, urbain:73, age_med:44.4, tourisme:14, ido:59, rail:9548, alpha:99, nobel:6, dist:882, alcool:13.3, tmax:41.9, armee:6525, rugby:29, cdm:10, prison:179, viande:82.8},
+  {name:"Serbie",            iso:"RS", pop:6549143,    pib:100,   fifa:40,  alt:2169,  cote:0,     unesco:5,  surf:77474,    vie:76.1,   dens:85,   front:8, pib_hab:15262, jo:28, co2:6.8, urbain:63, age_med:44.1, tourisme:3, ido:33, rail:3333, alpha:99, nobel:0, dist:1446, alcool:7.7, tmax:44.9, armee:2323, rugby:70, cdm:13, prison:162, viande:53.5},
+  {name:"Bulgarie",          iso:"BG", pop:6433302,    pib:131,  fifa:85,  alt:2925,  cote:354,   unesco:10, surf:110879,   vie:75.8,   dens:58,   front:5, pib_hab:20328, jo:231, co2:5.7, urbain:74, age_med:45.5, tourisme:12, ido:40, rail:4029, alpha:98, nobel:1, dist:1758, alcool:12.0, tmax:45.2, armee:2330, rugby:76, cdm:7, prison:99, viande:58.3},
+  {name:"Lituanie",          iso:"LT", pop:2888774,    pib:95.2,   fifa:149, alt:294,   cote:90,    unesco:5,  surf:65286,    vie:77.3,   dens:44,   front:4, pib_hab:32959, jo:30, co2:4.5, urbain:69, age_med:44, tourisme:2, ido:65, rail:1911, alpha:100, nobel:3, dist:1696, alcool:11.8, tmax:37.5, armee:2627, rugby:54, cdm:0, prison:156, viande:81.3},
+  {name:"Biélorussie",       iso:"BY", pop:9085991,    pib:93.4,   fifa:96,  alt:346,   cote:0,     unesco:4,  surf:207600,   vie:74.2,   dens:44,   front:5, pib_hab:10279, jo:85, co2:5.9, urbain:79, age_med:42.5, tourisme:0.4, ido:31, rail:5528, alpha:100, nobel:6, dist:1827, alcool:10.7, tmax:40.4, armee:1491, rugby:null, cdm:0, prison:345, viande:81.5},
+  {name:"Moldova",           iso:"MD", pop:2360527,    pib:20.4,   fifa:159, alt:430,   cote:0,     unesco:1,  surf:33847,    vie:71.2,   dens:70,   front:2, pib_hab:8622, jo:10, co2:3.3, urbain:44, age_med:40.4, tourisme:0.2, ido:42, rail:1171, alpha:99, nobel:0, dist:1976, alcool:11.1, tmax:42.4, armee:111, rugby:57, cdm:0, prison:235, viande:38.1},
+  {name:"Luxembourg",        iso:"LU", pop:686970,     pib:101,   fifa:98,  alt:559,   cote:0,     unesco:1,  surf:2586,     vie:83.3,   dens:266,  front:3, pib_hab:147252, jo:2, co2:10.4, urbain:95, age_med:40.1, tourisme:1, ido:78, rail:271, alpha:99, nobel:2, dist:287, alcool:11.5, tmax:40.8, armee:872, rugby:53, cdm:0, prison:89, viande:80.1},
+  {name:"Malte",             iso:"MT", pop:579704,     pib:27.8,   fifa:161, alt:253,   cote:197,   unesco:3,  surf:315,      vie:83.4,   dens:1840, front:0, pib_hab:47907, jo:0, co2:3.2, urbain:96, age_med:42.1, tourisme:2.3, ido:49, rail:0, alpha:93, nobel:0, dist:1748, alcool:9.5, tmax:43.8, armee:109, rugby:44, cdm:0, prison:119, viande:82.1},
+  {name:"Chypre",            iso:"CY", pop:1370754,    pib:41.2,   fifa:124, alt:1951,  cote:648,   unesco:3,  surf:9251,     vie:81.6,   dens:148,  front:1, pib_hab:41783, jo:2, co2:5.4, urbain:67, age_med:39.9, tourisme:3.5, ido:55, rail:0, alpha:99, nobel:1, dist:2949, alcool:8.5, tmax:46.2, armee:598, rugby:null, cdm:0, prison:103, viande:72.8},
+  {name:"Bosnie-Herzégovine",iso:"BA", pop:3140095,    pib:32.6,   fifa:61,  alt:2386,  cote:20,    unesco:5,  surf:51209,    vie:77.8,   dens:61,   front:3, pib_hab:10382, jo:0, co2:6.5, urbain:53, age_med:45.7, tourisme:1, ido:34, rail:965, alpha:97, nobel:0, dist:1345, alcool:6.2, tmax:46.2, armee:216, rugby:93, cdm:2, prison:67, viande:36.0},
+  {name:"Tanzanie",          iso:"TZ", pop:70545865,   pib:90.1,   fifa:112, alt:5895,  cote:1424,  unesco:7,  surf:947303,   vie:67,   dens:74,   front:8, pib_hab:1319, jo:2, co2:0.3, urbain:37, age_med:18.8, tourisme:2.1, ido:40, rail:4097, alpha:78, nobel:1, dist:6925, alcool:10.4, tmax:39.4, armee:921, rugby:null, cdm:0, prison:50, viande:null},
+  {name:"Ghana",             iso:"GH", pop:35064272,   pib:114,   fifa:65,  alt:885,   cote:539,   unesco:2,  surf:238537,   vie:65.5,   dens:147,  front:3, pib_hab:3257, jo:5, co2:0.7, urbain:59, age_med:21.6, tourisme:1, ido:43, rail:947, alpha:76, nobel:1, dist:4820, alcool:4.6, tmax:44.6, armee:269, rugby:81, cdm:5, prison:42, viande:13.7},
+  {name:"Cameroun",          iso:"CM", pop:29879337,   pib:58.9,   fifa:43,  alt:4045,  cote:402,   unesco:3,  surf:475650,   vie:63.7,   dens:63,   front:6, pib_hab:1972, jo:6, co2:0.4, urbain:56, age_med:19.4, tourisme:0.4, ido:26, rail:987, alpha:73, nobel:0, dist:5077, alcool:10.1, tmax:null, armee:535, rugby:106, cdm:8, prison:116, viande:12.0},
+  {name:"Côte d'Ivoire",     iso:"CI", pop:32711547,   pib:99.8,   fifa:31,  alt:1752,  cote:515,   unesco:5,  surf:322462,   vie:61.9,   dens:101,   front:5, pib_hab:3050, jo:5, co2:0.6, urbain:55, age_med:20, tourisme:0.7, ido:43, rail:660, alpha:50, nobel:0, dist:4729, alcool:2.8, tmax:49.5, armee:658, rugby:68, cdm:4, prison:91, viande:12.4},
+  {name:"Sénégal",           iso:"SN", pop:18931966,   pib:37,   fifa:18,  alt:648,   cote:531,   unesco:7,  surf:196712,   vie:68.7,   dens:96,   front:5, pib_hab:1955, jo:1, co2:0.8, urbain:56, age_med:19.4, tourisme:1.5, ido:46, rail:906, alpha:50, nobel:0, dist:4206, alcool:0.4, tmax:null, armee:515, rugby:47, cdm:4, prison:69, viande:14.1},
+  {name:"Mozambique",        iso:"MZ", pop:35631653,   pib:22.3,   fifa:103, alt:2436,  cote:2470,  unesco:2,  surf:799380,   vie:63.6,   dens:45,   front:6, pib_hab:627, jo:2, co2:0.3, urbain:37, age_med:17.4, tourisme:0.4, ido:21, rail:4787, alpha:62, nobel:0, dist:8845, alcool:2.1, tmax:null, armee:450, rugby:null, cdm:0, prison:63, viande:9.4},
+  {name:"Tunisie",           iso:"TN", pop:12348573,   pib:57.5,   fifa:57,  alt:1544,  cote:1148,  unesco:10,  surf:163610,   vie:76.5,   dens:75,   front:2, pib_hab:4657, jo:18, co2:2.6, urbain:71, age_med:34.1, tourisme:10.3, ido:39, rail:2173, alpha:86, nobel:2, dist:1480, alcool:2.6, tmax:55.0, armee:1314, rugby:48, cdm:7, prison:196, viande:28.4},
+  {name:"Angola",            iso:"AO", pop:39040039,   pib:122,  fifa:87, alt:2620,  cote:1600,  unesco:1,  surf:1246700,  vie:64.6,   dens:31,   front:4, pib_hab:3129, jo:0, co2:0.7, urbain:71, age_med:16.6, tourisme:0.4, ido:32, rail:2761, alpha:68, nobel:0, dist:6503, alcool:6.2, tmax:null, armee:922, rugby:null, cdm:1, prison:68, viande:23.5},
+  {name:"RD Congo",          iso:"CD", pop:112832473,  pib:91,   fifa:41,  alt:5110,  cote:37,    unesco:5,  surf:2344858,  vie:61.9,   dens:48,   front:9, pib_hab:807, jo:0, co2:0.1, urbain:45, age_med:16.9, tourisme:0.2, ido:20, rail:4007, alpha:68, nobel:1, dist:6046, alcool:2.1, tmax:null, armee:899, rugby:null, cdm:2, prison:46, viande:null},
+  {name:"Ouganda",           iso:"UG", pop:51384894,   pib:62,   fifa:89,  alt:5110,  cote:0,     unesco:3,  surf:241550,   vie:68.3,   dens:213,  front:5, pib_hab:1206, jo:13, co2:0.2, urbain:32, age_med:16.4, tourisme:1.4, ido:25, rail:1244, alpha:77, nobel:0, dist:6123, alcool:12.2, tmax:40.0, armee:1117, rugby:50, cdm:0, prison:152, viande:9.7},
+  {name:"Rwanda",            iso:"RW", pop:14569341,   pib:16.4,   fifa:128, alt:4519,  cote:0,     unesco:2,  surf:26338,    vie:67.8,   dens:553,  front:4, pib_hab:1124, jo:0, co2:0.2, urbain:31, age_med:21.3, tourisme:0.3, ido:58, rail:0, alpha:79, nobel:0, dist:6247, alcool:1.8, tmax:35.4, armee:176, rugby:104, cdm:0, prison:637, viande:9.1},
+  {name:"Namibie",           iso:"NA", pop:3092816,    pib:15.1,   fifa:121, alt:2573,  cote:1572,  unesco:2,  surf:824292,   vie:67.4,   dens:3.8,  front:4, pib_hab:4876, jo:5, co2:1.2, urbain:51, age_med:23.1, tourisme:1, ido:46, rail:2628, alpha:88, nobel:0, dist:8075, alcool:5.9, tmax:null, armee:362, rugby:26, cdm:0, prison:318, viande:30.5},
+  {name:"Venezuela",         iso:"VE", pop:28516896,   pib:99.7,   fifa:47,  alt:4978,  cote:2800,  unesco:3,  surf:912050,   vie:72.5,   dens:31,   front:3, pib_hab:3495, jo:19, co2:3.4, urbain:89, age_med:31.3, tourisme:0.5, ido:10, rail:447, alpha:97, nobel:2, dist:7617, alcool:3.0, tmax:43.6, armee:null, rugby:75, cdm:0, prison:199, viande:40.9},
+  {name:"Équateur",          iso:"EC", pop:18289896,   pib:130,  fifa:25,  alt:6267,  cote:2237,  unesco:5,  surf:283561,   vie:77.4,   dens:65,   front:2, pib_hab:7125, jo:10, co2:2.6, urbain:63, age_med:28.2, tourisme:2, ido:33, rail:965, alpha:93, nobel:0, dist:9361, alcool:3.3, tmax:null, armee:2698, rugby:null, cdm:5, prison:180, viande:45.2},
+  {name:"Bolivie",           iso:"BO", pop:12581843,   pib:64.8,   fifa:77,  alt:6542,  cote:0,     unesco:7,  surf:1098581,  vie:68.6,   dens:11,   front:5, pib_hab:5148, jo:0, co2:2, urbain:72, age_med:27, tourisme:0.8, ido:28, rail:3960, alpha:97, nobel:0, dist:10063, alcool:4.1, tmax:46.7, armee:655, rugby:null, cdm:3, prison:209, viande:71.4},
+  {name:"Paraguay",          iso:"PY", pop:7013078,    pib:49.3,   fifa:34,  alt:842,   cote:0,     unesco:1,  surf:406752,   vie:73.8,   dens:17,   front:3, pib_hab:7027, jo:1, co2:1.1, urbain:70, age_med:32.3, tourisme:1.2, ido:24, rail:30, alpha:95, nobel:0, dist:10161, alcool:5.8, tmax:46.4, armee:414, rugby:31, cdm:9, prison:239, viande:54.1},
+  {name:"Uruguay",           iso:"UY", pop:3384688,    pib:85.3,   fifa:20,  alt:514,   cote:660,   unesco:3,  surf:176215,   vie:78.1,   dens:19,   front:2, pib_hab:25216, jo:10, co2:2.4, urbain:96, age_med:37.4, tourisme:3.5, ido:73, rail:1673, alpha:99, nobel:0, dist:10962, alcool:5.6, tmax:44.0, armee:1737, rugby:18, cdm:15, prison:449, viande:87.3},
+  {name:"Cuba",              iso:"CU", pop:10937203,   pib:107,  fifa:164, alt:1974,  cote:3735,  unesco:9,  surf:109884,   vie:78.1,   dens:100,  front:0, pib_hab:null, jo:244, co2:1.8, urbain:77, age_med:46.2, tourisme:3, ido:40, rail:8367, alpha:98, nobel:0, dist:7720, alcool:6.0, tmax:39.7, armee:null, rugby:null, cdm:1, prison:794, viande:55.5},
+  {name:"Guatemala",         iso:"GT", pop:18687881,   pib:123,   fifa:97,  alt:4220,  cote:400,   unesco:4,  surf:108889,   vie:72.6,   dens:172,  front:4, pib_hab:6598, jo:3, co2:1.1, urbain:56, age_med:26.7, tourisme:2, ido:26, rail:800, alpha:82, nobel:2, dist:8993, alcool:1.6, tmax:45.0, armee:415, rugby:null, cdm:0, prison:123, viande:36.4},
+  {name:"Honduras",          iso:"HN", pop:11005850,   pib:39.6,   fifa:66,  alt:2870,  cote:823,   unesco:2,  surf:112492,   vie:72.9,   dens:98,   front:3, pib_hab:3598, jo:0, co2:1.1, urbain:59, age_med:26.1, tourisme:0.8, ido:22, rail:699, alpha:88, nobel:0, dist:8802, alcool:3.2, tmax:43.3, armee:581, rugby:null, cdm:3, prison:189, viande:33.1},
+  {name:"Costa Rica",        iso:"CR", pop:5152950,    pib:103,   fifa:51,  alt:3819,  cote:1290,  unesco:4,  surf:51180,    vie:80.8,   dens:101,  front:2, pib_hab:19970, jo:4, co2:1.6, urbain:80, age_med:36, tourisme:3.1, ido:56, rail:278, alpha:97, nobel:1, dist:8918, alcool:3.5, tmax:41.5, armee:0, rugby:91, cdm:6, prison:343, viande:53.6},
+  {name:"Panama",            iso:"PA", pop:4571189,    pib:90.5,   fifa:44,  alt:3475,  cote:2490,  unesco:5,  surf:75320,    vie:79.6,   dens:61,   front:2, pib_hab:19790, jo:4, co2:2.9, urbain:66, age_med:31.7, tourisme:2.1, ido:33, rail:77, alpha:96, nobel:0, dist:8662, alcool:6.7, tmax:40.0, armee:0, rugby:null, cdm:2, prison:522, viande:65.0},
+  {name:"Pakistan",          iso:"PK", pop:255219554,  pib:407,  fifa:198, alt:8611,  cote:1046,  unesco:6,  surf:882363,   vie:67.6,   dens:289,  front:4, pib_hab:1596, jo:11, co2:0.8, urbain:40, age_med:23.2, tourisme:0.5, ido:28, rail:11881, alpha:59, nobel:2, dist:5916, alcool:0.05, tmax:53.7, armee:10166, rugby:102, cdm:0, prison:38, viande:16.9},
+  {name:"Bangladesh",        iso:"BD", pop:175686899,  pib:456,  fifa:181, alt:1060,  cote:580,   unesco:3,  surf:148460,   vie:74.7,   dens:1183, front:2, pib_hab:2597, jo:0, co2:0.7, urbain:33, age_med:27.8, tourisme:0.8, ido:24, rail:2460, alpha:79, nobel:1, dist:7911, alcool:0.05, tmax:45.1, armee:4035, rugby:null, cdm:0, prison:50, viande:4.0},
+  {name:"Philippines",       iso:"PH", pop:116786962,  pib:487,  fifa:135, alt:2954,  cote:36289, unesco:6,  surf:300000,   vie:69.8,   dens:389,  front:0, pib_hab:4171, jo:18, co2:1.4, urbain:56, age_med:27.1, tourisme:5.5, ido:32, rail:77, alpha:98, nobel:1, dist:10743, alcool:6.2, tmax:42.2, armee:6118, rugby:43, cdm:0, prison:162, viande:37.0},
+  {name:"Malaisie",          iso:"MY", pop:35977838,   pib:472,  fifa:136, alt:4095,  cote:4675,  unesco:6,  surf:330621,   vie:76.7,   dens:109,  front:3, pib_hab:13125, jo:15, co2:8, urbain:77, age_med:32.2, tourisme:25, ido:52, rail:1851, alpha:96, nobel:0, dist:10424, alcool:0.9, tmax:40.1, armee:4313, rugby:55, cdm:0, prison:241, viande:52.9},
+  {name:"Sri Lanka",         iso:"LK", pop:21756000,   pib:109,   fifa:187, alt:2524,  cote:1340,  unesco:8,  surf:67240,    vie:77.5,   dens:324,  front:0, pib_hab:5002, jo:2, co2:1, urbain:20, age_med:34.2, tourisme:1.5, ido:35, rail:1562, alpha:93, nobel:0, dist:8514, alcool:2.9, tmax:39.8, armee:1333, rugby:49, cdm:0, prison:131, viande:9.0},
+  {name:"Népal",             iso:"NP", pop:29618118,   pib:45.5,   fifa:177, alt:8849,  cote:0,     unesco:4,  surf:147181,   vie:70.4,   dens:201,  front:2, pib_hab:1536, jo:0, co2:0.5, urbain:67, age_med:28.1, tourisme:1, ido:34, rail:59, alpha:69, nobel:0, dist:7237, alcool:1.4, tmax:46.4, armee:427, rugby:103, cdm:0, prison:90, viande:13.6},
+  {name:"Kazakhstan",        iso:"KZ", pop:20843754,   pib:306,  fifa:111, alt:7010,  cote:0,     unesco:7,  surf:2724910,  vie:74.4,   dens:7.6,    front:5, pib_hab:14692, jo:78, co2:12.6, urbain:62, age_med:32.1, tourisme:7, ido:38, rail:16636, alpha:100, nobel:0, dist:4758, alcool:4.6, tmax:49.1, armee:1209, rugby:59, cdm:0, prison:184, viande:64.9},
+  {name:"Iran",              iso:"IR", pop:92417681,   pib:363,  fifa:22,  alt:5625,  cote:2440,  unesco:30, surf:1648195,  vie:77.7,   dens:56,   front:7, pib_hab:3924, jo:88, co2:9, urbain:77, age_med:35.2, tourisme:4, ido:23, rail:8484, alpha:89, nobel:2, dist:4211, alcool:0.7, tmax:53.7, armee:7892, rugby:90, cdm:7, prison:228, viande:36.0},
+  {name:"Irak",              iso:"IQ", pop:47020774,   pib:254,  fifa:63,  alt:3611,  cote:58,    unesco:6,  surf:438317,   vie:72.3,   dens:107,   front:6, pib_hab:5410, jo:1, co2:5.2, urbain:70, age_med:22.7, tourisme:1.5, ido:28, rail:2272, alpha:84, nobel:1, dist:3860, alcool:0.2, tmax:53.9, armee:6179, rugby:null, cdm:2, prison:179, viande:null},
+  {name:"Jordanie",          iso:"JO", pop:11520684,   pib:61.6,   fifa:73,  alt:1854,  cote:26,    unesco:8,  surf:89318,    vie:77.8,   dens:129,  front:5, pib_hab:5348, jo:4, co2:2.1, urbain:93, age_med:25.4, tourisme:3.7, ido:50, rail:509, alpha:94, nobel:1, dist:3367, alcool:0.3, tmax:51.1, armee:2560, rugby:null, cdm:1, prison:185, viande:37.9},
+  {name:"Qatar",             iso:"QA", pop:2972215,    pib:216,  fifa:59,  alt:103,   cote:563,   unesco:1,  surf:11586,    vie:82.4,   dens:257,  front:1, pib_hab:72525, jo:9, co2:48.6, urbain:99, age_med:34.4, tourisme:4.1, ido:58, rail:0, alpha:98, nobel:0, dist:4973, alcool:1.2, tmax:50.4, armee:null, rugby:98, cdm:2, prison:69, viande:null},
+  {name:"Mongolie",          iso:"MN", pop:3568978,    pib:25.4,   fifa:190, alt:4374,  cote:0,     unesco:7,  surf:1564116,  vie:72.1,   dens:2.3,  front:2, pib_hab:7108, jo:31, co2:7.8, urbain:71, age_med:28.8, tourisme:0.5, ido:31, rail:1815, alpha:99, nobel:0, dist:7047, alcool:7.9, tmax:44.0, armee:181, rugby:null, cdm:0, prison:183, viande:88.4},
+  {name:"Myanmar",           iso:"MM", pop:54850648,   pib:81.7,   fifa:158, alt:5870,  cote:1930,  unesco:2,  surf:676578,   vie:66.9,   dens:81,   front:5, pib_hab:1489, jo:0, co2:0.6, urbain:31, age_med:31.1, tourisme:0.5, ido:16, rail:5031, alpha:94, nobel:1, dist:8636, alcool:2.1, tmax:47.2, armee:5011, rugby:null, cdm:0, prison:183, viande:58.2},
+  {name:"Singapour",         iso:"SG", pop:6111175,    pib:604,  fifa:148, alt:166,   cote:193,   unesco:1,  surf:745,      vie:83.1,   dens:8203, front:0, pib_hab:98814, jo:6, co2:9.5, urbain:100, age_med:39.8, tourisme:13.6, ido:84, rail:0, alpha:98, nobel:0, dist:10737, alcool:2.0, tmax:37.0, armee:15061, rugby:72, cdm:0, prison:156, viande:null},
+  {name:"Papouasie-Nouvelle-Guinée",iso:"PG",pop:10762817,pib:32.5,fifa:168,alt:4509, cote:5152,  unesco:1,  surf:462840,   vie:66.1,   dens:23,   front:1, pib_hab:3020, jo:0, co2:0.5, urbain:16, age_med:21.9, tourisme:0.2, ido:26, rail:0, alpha:87, nobel:0, dist:14552, alcool:1.7, tmax:null, armee:91, rugby:94, cdm:0, prison:57, viande:null},
+  {name:"Fidji",             iso:"FJ", pop:933154,     pib:6.2,    fifa:155, alt:1324,  cote:1129,  unesco:1,  surf:18272,    vie:67.3,   dens:51,   front:0, pib_hab:6642, jo:4, co2:1.6, urbain:60, age_med:32, tourisme:0.9, ido:55, rail:597, alpha:null, nobel:0, dist:16581, alcool:3.7, tmax:37.4, armee:78, rugby:10, cdm:0, prison:248, viande:43.9}
 ];
 
 const CATEGORIES = [
   {key:"pop",    label:"Population",            unit:"hab.",     icon:"👥", fmt:v=>v.toLocaleString("fr-FR")+" hab."},
-  {key:"pib",    label:"PIB nominal",           unit:"Md$",      icon:"💰", fmt:v=>v.toLocaleString("fr-FR")+" Md$"},
-  {key:"fifa",   label:"Classement FIFA",       unit:"rang",     icon:"⚽", fmt:v=>"#"+v, note:"Plus le rang est bas, meilleure est l'équipe"},
+  {key:"pib",    label:"PIB nominal",           unit:"Md$",      icon:"💰", fmt:v=>v.toLocaleString("fr-FR")+" Md$", note:"Derniers chiffres publiés : Émirats arabes unis 2024, Cuba 2020"},
+  {key:"fifa",   label:"Classement FIFA",       unit:"rang",     icon:"⚽", fmt:v=>"#"+v, note:"Plus le rang est bas, meilleure est l'équipe. Royaume-Uni = Angleterre"},
   {key:"alt",    label:"Point culminant",       unit:"m",        icon:"⛰️", fmt:v=>v.toLocaleString("fr-FR")+" m"},
   {key:"cote",   label:"Longueur des côtes",    unit:"km",       icon:"🌊", fmt:v=>v.toLocaleString("fr-FR")+" km"},
   {key:"unesco", label:"Sites UNESCO",          unit:"sites",    icon:"🏛️", fmt:v=>v+" site"+(v>1?"s":"")},
-  {key:"surf",   label:"Superficie",            unit:"km²",      icon:"🗺️", fmt:v=>v.toLocaleString("fr-FR")+" km²"},
-  {key:"vie",    label:"Espérance de vie",      unit:"ans",      icon:"❤️", fmt:v=>v+" ans"},
-  {key:"dens",   label:"Densité de population", unit:"hab/km²",  icon:"🏙️", fmt:v=>v+" hab/km²"},
-  {key:"pib_hab", label:"PIB par habitant",          unit:"$",          icon:"💵", fmt:v=>"$"+v.toLocaleString("fr-FR")},
-  {key:"jo",      label:"Médailles JO d'été",        unit:"médailles",  icon:"🏅", fmt:v=>v+" médaille"+(v>1?"s":""), note:"Total 1896–2024"},
-  {key:"co2",     label:"CO₂ par habitant",          unit:"t/an",       icon:"🌫️", fmt:v=>v.toFixed(1)+" t/hab/an"},
+  {key:"surf",   label:"Superficie",            unit:"km²",      icon:"🗺️", fmt:v=>v.toLocaleString("fr-FR")+" km²", note:"Superficie totale, départements d'outre-mer compris pour la France"},
+  {key:"vie",    label:"Espérance de vie",      unit:"ans",      icon:"❤️", fmt:v=>v.toLocaleString("fr-FR")+" ans"},
+  {key:"dens",   label:"Densité de population", unit:"hab/km²",  icon:"🏙️", fmt:v=>v.toLocaleString("fr-FR")+" hab/km²"},
+  {key:"pib_hab", label:"PIB par habitant",          unit:"$",          icon:"💵", fmt:v=>v.toLocaleString("fr-FR")+" $", note:"Émirats arabes unis : calculé à partir du PIB 2024"},
+  {key:"jo",      label:"Médailles JO d'été",        unit:"médailles",  icon:"🏅", fmt:v=>v+" médaille"+(v>1?"s":""), note:"Jeux d'été, sous le drapeau actuel du pays (hors URSS, RFA/RDA, Yougoslavie…)"},
+  {key:"co2",     label:"CO₂ par habitant",          unit:"t/an",       icon:"🌫️", fmt:v=>v.toLocaleString("fr-FR",{minimumFractionDigits:1})+" t/hab/an", note:"Hors forêts et usage des sols. Serbie : CIA World Factbook"},
   {key:"urbain",  label:"Taux d'urbanisation",       unit:"%",          icon:"🏙️", fmt:v=>v+"%"},
-  {key:"age_med", label:"Âge médian",                unit:"ans",        icon:"📅", fmt:v=>v+" ans"},
-  {key:"tourisme",label:"Visiteurs internationaux",  unit:"M/an",       icon:"✈️", fmt:v=>v.toLocaleString("fr-FR")+" M visiteurs/an"},
-  {key:"ido",     label:"Indice de corruption TI",   unit:"/100",       icon:"🔎", fmt:v=>v+"/100", note:"100 = très peu corrompu (TI CPI 2023)"},
-  {key:"rail",    label:"Réseau ferroviaire",        unit:"km",         icon:"🚂", fmt:v=>v.toLocaleString("fr-FR")+" km"},
-  {key:"alpha",   label:"Taux d'alphabétisation",   unit:"%",          icon:"📚", fmt:v=>v+"%"},
-  {key:"nobel",   label:"Prix Nobel",                unit:"lauréats",   icon:"🏆", fmt:v=>v+" lauréat"+(v>1?"s":"")},
-  {key:"front",  label:"Pays frontaliers",      unit:"voisins",  icon:"🧭", fmt:v=>v+" voisin"+(v>1?"s":"")}
+  {key:"age_med", label:"Âge médian",                unit:"ans",        icon:"📅", fmt:v=>v.toLocaleString("fr-FR")+" ans"},
+  {key:"tourisme",label:"Visiteurs internationaux",  unit:"M/an",       icon:"✈️", fmt:v=>v.toLocaleString("fr-FR")+" M visiteurs/an", note:"Touristes internationaux (nuitée sur place)"},
+  {key:"ido",     label:"Indice de corruption TI",   unit:"/100",       icon:"🔎", fmt:v=>v+"/100", note:"100 = très peu corrompu"},
+  {key:"rail",    label:"Réseau ferroviaire",        unit:"km",         icon:"🚂", fmt:v=>v.toLocaleString("fr-FR")+" km", note:"Réseau ferré national, hors métros. Émirats : Etihad Rail"},
+  {key:"alpha",   label:"Taux d'alphabétisation",   unit:"%",          icon:"📚", fmt:v=>v+"%", note:"Adultes. 99 % par convention pour les pays sans enquête (Europe de l'Ouest, Amérique du Nord, Japon…)"},
+  {key:"nobel",   label:"Prix Nobel",                unit:"lauréats",   icon:"🏆", fmt:v=>v+" lauréat"+(v>1?"s":""), note:"Lauréats rattachés au pays par le comité Nobel (nationalité ou naissance)"},
+  {key:"front",  label:"Pays frontaliers",      unit:"voisins",  icon:"🧭", fmt:v=>v+" voisin"+(v>1?"s":""), note:"Outre-mer compris (ex. la France touche le Brésil par la Guyane)"},
+
+  {key:"dist",    label:"Distance à Paris",          unit:"km",         icon:"📍", fmt:v=>v.toLocaleString("fr-FR")+" km", note:"De capitale à capitale, à vol d'oiseau"},
+  {key:"alcool",  label:"Consommation d'alcool",     unit:"L/an",       icon:"🍷", fmt:v=>v<0.1?"< 0,1 L/hab/an":v.toLocaleString("fr-FR",{minimumFractionDigits:1})+" L/hab/an", note:"Litres d'alcool pur par adulte (15 ans et +)"},
+  {key:"tmax",    label:"Record de chaleur",         unit:"°C",         icon:"🌡️", fmt:v=>v.toLocaleString("fr-FR",{minimumFractionDigits:1})+" °C", note:"Température la plus haute jamais relevée dans le pays"},
+  {key:"armee",   label:"Budget militaire",          unit:"M$",         icon:"🪖", fmt:v=>v===0?"0 $ (pas d'armée)":v>=1000?(v/1000).toLocaleString("fr-FR",{maximumFractionDigits:1})+" Md$":v.toLocaleString("fr-FR")+" M$", note:"Dépenses militaires annuelles"},
+  {key:"rugby",   label:"Classement mondial rugby",  unit:"rang",       icon:"🏉", fmt:v=>"#"+v, nullLabel:"Non classé", note:"Plus le rang est bas, meilleure est l'équipe. Royaume-Uni = Angleterre"},
+  {key:"cdm",     label:"Participations Coupe du monde", unit:"éditions", icon:"🏟️", fmt:v=>v+" participation"+(v>1?"s":""), note:"Football masculin. Royaume-Uni = Angleterre"},
+  {key:"prison",  label:"Taux d'incarcération",      unit:"/100 000",   icon:"⛓️", fmt:v=>v+" détenus / 100 000 hab.", note:"Nombre de détenus pour 100 000 habitants"},
+  {key:"viande",  label:"Consommation de viande",    unit:"kg/an",      icon:"🥩", fmt:v=>v.toLocaleString("fr-FR",{maximumFractionDigits:1})+" kg/hab/an", note:"Viande disponible par habitant"}
 ];
+
+/* ========== SOURCES DES DONNÉES ========== */
+const SOURCES = {
+  pop:     {label:"Banque mondiale", url:"https://data.worldbank.org/indicator/SP.POP.TOTL", date:"2025"},
+  pib:     {label:"Banque mondiale", url:"https://data.worldbank.org/indicator/NY.GDP.MKTP.CD", date:"2025"},
+  fifa:    {label:"FIFA", url:"https://inside.fifa.com/fifa-world-ranking/men", date:"classement du 20 juil. 2026"},
+  alt:     {label:"CIA World Factbook (archive)", url:"https://github.com/factbook/factbook.json", date:"dernière édition, 2026"},
+  cote:    {label:"CIA World Factbook (archive)", url:"https://github.com/factbook/factbook.json", date:"dernière édition, 2026"},
+  unesco:  {label:"UNESCO, via statranker.org", url:"https://whc.unesco.org/fr/list/", date:"oct. 2026"},
+  surf:    {label:"Division statistique de l'ONU", url:"https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area", date:"consulté en oct. 2026"},
+  vie:     {label:"Banque mondiale", url:"https://data.worldbank.org/indicator/SP.DYN.LE00.IN", date:"2023"},
+  dens:    {label:"Calculée (population 2025 ÷ superficie)", date:"2025"},
+  front:   {label:"Wikipédia", url:"https://en.wikipedia.org/wiki/List_of_countries_and_territories_by_number_of_land_borders", date:"consulté en oct. 2026"},
+  pib_hab: {label:"Banque mondiale", url:"https://data.worldbank.org/indicator/NY.GDP.PCAP.CD", date:"2025"},
+  jo:      {label:"Wikipédia (tableau des médailles du CIO)", url:"https://en.wikipedia.org/wiki/All-time_Olympic_Games_medal_table", date:"1896–2024"},
+  co2:     {label:"Banque mondiale (EDGAR)", url:"https://data.worldbank.org/indicator/EN.GHG.CO2.PC.CE.AR5", date:"2023"},
+  urbain:  {label:"Banque mondiale (ONU)", url:"https://data.worldbank.org/indicator/SP.URB.TOTL.IN.ZS", date:"2025"},
+  age_med: {label:"CIA World Factbook (archive)", url:"https://github.com/factbook/factbook.json", date:"estimations 2025"},
+  tourisme:{label:"ONU Tourisme, via Wikipédia", url:"https://en.wikipedia.org/wiki/World_Tourism_rankings", date:"2024 pour 33 pays, ≈ 2023 (non vérifié) pour les autres"},
+  ido:     {label:"Transparency International – CPI", url:"https://www.transparency.org/en/cpi/2025", date:"2025"},
+  rail:    {label:"CIA World Factbook (archive)", url:"https://github.com/factbook/factbook.json", date:"dernière année dispo. (2008–2022)"},
+  alpha:   {label:"Banque mondiale (UNESCO)", url:"https://data.worldbank.org/indicator/SE.ADT.LITR.ZS", date:"dernière année dispo."},
+  nobel:   {label:"Wikipédia (d'après NobelPrize.org)", url:"https://en.wikipedia.org/wiki/List_of_Nobel_laureates_by_country", date:"jusqu'en 2026"},
+  dist:    {label:"Calcul à partir des coordonnées GeoNames", url:"https://www.geonames.org/", date:"données stables"},
+  alcool:  {label:"OMS – Global Health Observatory", url:"https://www.who.int/data/gho/data/themes/topics/topic-details/GHO/levels-of-consumption", date:"données 2019 (rapport 2024)"},
+  tmax:    {label:"Wikipédia – List of weather records", url:"https://en.wikipedia.org/wiki/List_of_weather_records", date:"consulté en oct. 2026"},
+  armee:   {label:"SIPRI, via la Banque mondiale", url:"https://data.worldbank.org/indicator/MS.MIL.XPND.CD", date:"2024"},
+  rugby:   {label:"World Rugby", url:"https://www.world.rugby/tournaments/rankings/mru", date:"5 oct. 2026"},
+  cdm:     {label:"FIFA (via Wikipédia)", url:"https://en.wikipedia.org/wiki/National_team_appearances_in_the_FIFA_World_Cup", date:"1930–2026"},
+  prison:  {label:"World Prison Brief", url:"https://www.prisonstudies.org/highest-to-lowest/prison_population_rate", date:"oct. 2024 et après"},
+  viande:  {label:"FAO – FAOSTAT", url:"https://www.fao.org/faostat/fr/#data/FBS", date:"2020"}
+};
+CATEGORIES.forEach(c => { c.src = SOURCES[c.key]; });
+
+function srcHTML(cat){
+  const s = cat && cat.src;
+  if(!s) return "";
+  const name = s.url ? `<a href="${s.url}" target="_blank" rel="noopener">${s.label}</a>` : s.label;
+  return `Source : ${name} · ${s.date}`;
+}
 
 /* ========== ÉTAT ========== */
 let currentMode = 'libre';
@@ -632,12 +708,17 @@ let libereCat = null;
 // Mode classique
 let classiqueCat = null;
 let classiqueUsed = new Set();
+let classiqueRounds = 15; // nombre de manches choisi en début de partie
 
 // Mode multi
 let multiX = 3;
 let multiCats = []; // catégories tirées pour la partie
 
 /* ========== UTILITAIRES ========== */
+function show(cat, v){
+  if(v === null || v === undefined) return cat.nullLabel || "Donnée indisponible";
+  return cat.fmt(v);
+}
 function flag(iso){
   return iso.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
 }
@@ -672,6 +753,7 @@ function buildCatGrid(){
       libereCat = cat;
       document.querySelectorAll('.cat-grid-item').forEach(el => el.classList.remove('selected'));
       item.classList.add('selected');
+      document.getElementById('libre-src').innerHTML = srcHTML(cat);
       renderResults(document.getElementById('search-input').value.trim());
     });
     grid.appendChild(item);
@@ -679,9 +761,18 @@ function buildCatGrid(){
 }
 
 /* ========== MODE CLASSIQUE ========== */
+function changeRounds(delta){
+  classiqueRounds = Math.max(1, Math.min(CATEGORIES.length, classiqueRounds + delta));
+  document.getElementById('rounds-val').textContent = classiqueRounds;
+  document.getElementById('rounds-label').textContent = classiqueRounds + ' manche' + (classiqueRounds > 1 ? 's' : '');
+  document.getElementById('btn-rounds-minus').disabled = classiqueRounds <= 1;
+  document.getElementById('btn-rounds-plus').disabled = classiqueRounds >= CATEGORIES.length;
+  document.getElementById('classique-total').textContent = classiqueRounds;
+}
+
 document.getElementById('btn-draw-classique').addEventListener('click', () => {
   const pool = CATEGORIES.filter(c => !classiqueUsed.has(c.key));
-  if(pool.length === 0) return;
+  if(pool.length === 0 || classiqueUsed.size >= classiqueRounds) return;
 
   classiqueCat = pool[Math.floor(Math.random() * pool.length)];
   classiqueUsed.add(classiqueCat.key);
@@ -701,40 +792,42 @@ function updateClassiqueUI(){
   const btn = document.getElementById('btn-draw-classique');
   const counter = document.getElementById('classique-used');
   counter.textContent = classiqueUsed.size;
+  const started = classiqueUsed.size > 0;
+  document.getElementById('classique-setup').style.display = started ? 'none' : '';
+  document.getElementById('classique-meta').style.display = started ? '' : 'none';
+  document.getElementById('btn-reset-classique').style.display = started ? '' : 'none';
+  const catHTML = c => `
+      <div class="cat-icon">${c.icon}</div>
+      <div class="cat-name">${c.label}</div>
+      <div class="cat-desc">${c.note || "Classe les pays du plus petit au plus grand"}</div>
+      <div class="src-line">${srcHTML(c)}</div>
+    `;
 
   if(!classiqueCat){
     card.className = 'cat-card empty';
     card.innerHTML = `<div class="cat-icon">🎲</div><div class="placeholder">Tire une catégorie pour commencer</div>`;
     btn.disabled = false;
-    btn.textContent = '🎲 Tirer une catégorie';
-  } else if(classiqueUsed.size >= CATEGORIES.length){
+    btn.textContent = '🎲 Commencer la partie';
+  } else if(classiqueUsed.size >= classiqueRounds){
     card.className = 'cat-card filled';
-    card.innerHTML = `
-      <div class="cat-icon">${classiqueCat.icon}</div>
-      <div class="cat-name">${classiqueCat.label}</div>
-      <div class="cat-desc">${classiqueCat.note || "Classe les pays du plus petit au plus grand"}</div>
-    `;
+    card.innerHTML = catHTML(classiqueCat);
     btn.disabled = true;
-    btn.textContent = '✅ Toutes les catégories utilisées';
+    btn.textContent = '🏁 Partie terminée';
   } else {
     card.className = 'cat-card filled';
-    card.innerHTML = `
-      <div class="cat-icon">${classiqueCat.icon}</div>
-      <div class="cat-name">${classiqueCat.label}</div>
-      <div class="cat-desc">${classiqueCat.note || "Classe les pays du plus petit au plus grand"}</div>
-    `;
+    card.innerHTML = catHTML(classiqueCat);
     btn.disabled = false;
-    btn.textContent = '🎲 Tirer une autre catégorie';
+    btn.textContent = '🎲 Manche suivante';
   }
 }
 
 /* ========== MODE MULTI ========== */
 function changeMultiX(delta){
-  multiX = Math.max(1, Math.min(20, multiX + delta));
+  multiX = Math.max(1, Math.min(CATEGORIES.length, multiX + delta));
   document.getElementById('multi-x-val').textContent = multiX;
   document.getElementById('multi-x-label').textContent = multiX + ' catégorie' + (multiX > 1 ? 's' : '');
   document.getElementById('btn-minus').disabled = multiX <= 1;
-  document.getElementById('btn-plus').disabled = multiX >= 20;
+  document.getElementById('btn-plus').disabled = multiX >= CATEGORIES.length;
 }
 
 document.getElementById('btn-draw-multi').addEventListener('click', () => {
@@ -832,14 +925,14 @@ function renderResults(query){
           <div class="result-name">${c.name}</div>
           <div class="result-cat">${cat.icon} ${cat.label}</div>
         </div>
-        <div class="result-value">${cat.fmt(c[cat.key])}</div>
+        <div class="result-value">${show(cat, c[cat.key])}</div>
       `;
     } else {
       // Mode multi : afficher toutes les catégories actives
       const rowsHtml = activeCats.map(cat =>
         `<div class="result-multi-row">
           <span class="result-multi-label">${cat.icon} ${cat.label}</span>
-          <span class="result-multi-val">${cat.fmt(c[cat.key])}</span>
+          <span class="result-multi-val">${show(cat, c[cat.key])}</span>
         </div>`
       ).join('');
       card.innerHTML = `
@@ -872,8 +965,8 @@ function openModal(country){
     const row = document.createElement('div');
     row.className = 'modal-row';
     row.innerHTML = `
-      <div class="modal-row-label">${cat.icon} ${cat.label}</div>
-      <div class="modal-row-value${isActive ? " highlight" : ""}">${cat.fmt(country[cat.key])}</div>
+      <div class="modal-row-label">${cat.icon} ${cat.label}${isActive ? `<div class="src-line">${srcHTML(cat)}</div>` : ""}</div>
+      <div class="modal-row-value${isActive ? " highlight" : ""}">${show(cat, country[cat.key])}</div>
     `;
     rows.appendChild(row);
   });
@@ -887,6 +980,7 @@ function closeModal(e){
 }
 
 /* ========== INIT ========== */
+changeRounds(0);
 buildCatGrid();
 updateClassiqueUI();
 updateMultiUI();
